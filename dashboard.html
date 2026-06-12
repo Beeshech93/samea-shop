@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard SAMÉA</title>
+  <link rel="stylesheet" href="styles.css?v=4" />
+</head>
+<body>
+  <div class="topbar">Panel de administración | Control total de pedidos, inventario y promociones</div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div>
+        <a href="index.html" class="brand">
+          <img id="siteLogo" class="site-logo" src="assets/logo.png" alt="SAMÉA — Piel de seda — Lencería fina" title="SAMÉA — Piel de seda" />
+        </a>
+        <p class="domain-label">Panel de control de la tienda</p>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html">Tienda</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <button class="cart-button" id="cartButton" aria-label="Abrir notificaciones">
+        📊 <span id="cartCount">3</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-page">
+    <section class="dashboard-hero">
+      <div class="container">
+        <div class="dashboard-hero-copy">
+          <p class="eyebrow">Dashboard de control</p>
+          <h1>Monitorea tu tienda SAMÉA en tiempo real</h1>
+          <p>Visualiza ventas, stock, pedidos y métricas clave desde un único panel diseñado para administradores.</p>
+        </div>
+        <div class="dashboard-summary">
+          <article class="summary-card">
+            <span>Ingresos hoy</span>
+            <strong id="todayRevenue">$0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Pedidos pendientes</span>
+            <strong id="pendingOrders">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Productos en stock</span>
+            <strong id="stockCount">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Clientes nuevos</span>
+            <strong id="newCustomers">0</strong>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid container">
+      <article class="dashboard-card">
+        <h2>Órdenes recientes</h2>
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Cliente</th>
+              <th>Estado</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </article>
+
+      <article class="dashboard-card">
+        <h2>Estado de inventario</h2>
+        <ul class="inventory-list" id="inventoryList"></ul>
+      </article>
+
+      <article class="dashboard-card wide-card">
+        <h2>Controles rápidos</h2>
+        <div class="control-panel">
+          <label class="toggle-field">
+            <span>Modo mantenimiento</span>
+            <input type="checkbox" id="maintenanceToggle" />
+            <span class="slider"></span>
+          </label>
+          <label class="toggle-field">
+            <span>Notificaciones activas</span>
+            <input type="checkbox" id="notificationsToggle" checked />
+            <span class="slider"></span>
+          </label>
+          <button class="btn btn-secondary" id="refreshButton">Actualizar datos</button>
+          <p class="control-note">Actualiza las métricas para ver datos recientes y activar alertas de stock bajo.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contacto">
+    <div class="container footer-inner">
+      <div>
+        <h3>SAMÉA</h3>
+        <p>Panel administrativo de la tienda. Mantén todo bajo control desde un solo lugar.</p>
+      </div>
+      <div>
+        <p>Soporte: hola@samea.com.mx</p>
+        <p>Actualizado: <span id="lastUpdated">Hoy</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="dashboard.js?v=1"></script>
+</body>
+</html>

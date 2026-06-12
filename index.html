@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAMÉA</title>
+  <link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+  <div class="topbar">10% EXTRA EN LA APP. CÓDIGO: APP10 | ENVÍO GRATIS A PARTIR DE $899 MXN</div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div>
+        <a href="#home" class="brand">
+          <img id="siteLogo" class="site-logo" src="assets/logo.png" alt="SAMÉA — Piel de seda — Lencería fina" title="SAMÉA — Piel de seda" />
+        </a>
+        <p class="domain-label">Dominio: <strong>samea.shop</strong></p>
+      </div>
+      <nav class="main-nav">
+        <a href="#coleccion">Colección</a>
+        <a href="#destacados">Total Looks</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <div class="auth-actions" id="authActions">
+        <span class="auth-status hidden" id="authStatus">Hola, <strong id="authUserName"></strong></span>
+        <button class="btn btn-secondary hidden" id="logoutButton" type="button">Cerrar sesión</button>
+        <button class="btn btn-secondary" id="loginButton" type="button">Iniciar sesión</button>
+        <button class="btn btn-primary" id="registerButton" type="button">Registrarse</button>
+      </div>
+      <button class="cart-button" id="cartButton" type="button" aria-label="Abrir carrito" onclick="document.getElementById('cartModal').classList.add('open'); document.getElementById('cartModal').setAttribute('aria-hidden', 'false');">
+        🛍️ <span id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-content">
+        <div class="hero-copy">
+          <div class="hero-sale">REBAJAS HASTA -70% | EN TIENDAS, WEB Y APP</div>
+          <h1>Tu nueva colección de lingerie femenia</h1>
+          <p>Descubre diseños suaves, sexy y cómodos pensados para celebrar tu cuerpo con confianza.</p>
+          <div class="hero-actions">
+            <a href="#coleccion" class="btn btn-primary">Ver colección</a>
+            <a href="#destacados" class="btn btn-secondary">Ofertas exclusivas</a>
+          </div>
+          <div class="hero-categories">
+            <a href="#coleccion" class="pill">Bras</a>
+            <a href="#coleccion" class="pill">Panties</a>
+            <a href="#coleccion" class="pill">Dormir</a>
+            <a href="#coleccion" class="pill">Accesorios</a>
+          </div>
+        </div>
+        <div class="hero-image"></div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container features-grid">
+        <article>
+          <h2>Materiales suaves</h2>
+          <p>Tejidos ligeros y respirables para máxima comodidad todo el día.</p>
+        </article>
+        <article>
+          <h2>Estilos femeninos</h2>
+          <p>Modelos clásicos, sensuales y modernos para todos los gustos.</p>
+        </article>
+        <article>
+          <h2>Envío rápido</h2>
+          <p>Compra hoy y recibe tu paquete con total seguridad y rapidez.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="product-section" id="coleccion">
+      <div class="container section-header">
+        <p class="eyebrow">Ropa interior de mujer</p>
+        <h2>Ropa interior de mujer destacada</h2>
+      </div>
+      <div class="collection-tabs">
+        <button class="tab active">Sujetadores</button>
+        <button class="tab">Conjuntos</button>
+        <button class="tab">Básicos</button>
+        <button class="tab">Novedades</button>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </section>
+
+    <section class="total-looks" id="destacados">
+      <div class="container total-looks-card">
+        <div>
+          <p class="eyebrow">TOTAL LOOKS</p>
+          <h2>-15% EXTRA en conjuntos completos</h2>
+          <p>Crea tus looks de lingerie y duerme con estilo. Combina tops, bragas y accesorios con descuento extra.</p>
+          <div class="total-looks-actions">
+            <a href="#coleccion" class="pill">Ropa interior</a>
+            <a href="#coleccion" class="pill">Dormir</a>
+            <a href="#coleccion" class="pill">Beachwear</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contacto">
+    <div class="container footer-inner">
+      <div>
+        <h3>SAMÉA</h3>
+        <p>Ropa interior de mujer para sentirte segura, cómoda y bella cada día.</p>
+      </div>
+      <div>
+        <p>Soporte: hola@samea.com.mx</p>
+        <p>Envíos a todo México</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="auth-modal" id="authModal" aria-hidden="true" onclick="if (event.target === this) { closeAuthModal(); }">
+    <div class="auth-panel">
+      <button class="auth-close" id="closeAuthButton" type="button" aria-label="Cerrar" onclick="closeAuthModal()">×</button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" type="button">Iniciar sesión</button>
+        <button class="auth-tab" id="registerTab" type="button">Registrarse</button>
+      </div>
+      <form class="auth-form" id="loginForm">
+        <h2>Iniciar sesión</h2>
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" id="loginEmail" placeholder="correo@ejemplo.com" required />
+        </label>
+        <label class="form-field">
+          <span>Contraseña</span>
+          <input type="password" id="loginPassword" placeholder="********" required />
+        </label>
+        <button class="btn btn-primary" id="submitLogin" type="button">Entrar</button>
+      </form>
+      <form class="auth-form hidden" id="registerForm">
+        <h2>Registrarse</h2>
+        <label class="form-field">
+          <span>Nombre completo</span>
+          <input type="text" id="registerName" placeholder="Tu nombre" required />
+        </label>
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" id="registerEmail" placeholder="correo@ejemplo.com" required />
+        </label>
+        <label class="form-field">
+          <span>Contraseña</span>
+          <input type="password" id="registerPassword" placeholder="********" required />
+        </label>
+        <label class="form-field">
+          <span>Confirmar contraseña</span>
+          <input type="password" id="registerPasswordConfirm" placeholder="********" required />
+        </label>
+        <button class="btn btn-primary" id="submitRegister" type="button">Crear cuenta</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="cart-modal" id="cartModal" aria-hidden="true" onclick="if (event.target === this) { this.classList.remove('open'); this.setAttribute('aria-hidden','true'); }">
+    <div class="cart-panel">
+      <button class="close-cart" id="closeCartButton" type="button" aria-label="Cerrar carrito" onclick="document.getElementById('cartModal').classList.remove('open'); document.getElementById('cartModal').setAttribute('aria-hidden','true');">×</button>
+      <h2>Tu carrito</h2>
+      <div id="cartItems" class="cart-items"></div>
+      <div class="payment-section">
+        <h3>Pago con tarjeta</h3>
+        <p>Completa tus datos y paga con tarjeta de crédito o débito de forma segura.</p>
+        <div class="card-form">
+          <label class="form-field">
+            <span>Número de tarjeta</span>
+            <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" />
+          </label>
+          <label class="form-field">
+            <span>Nombre en la tarjeta</span>
+            <input type="text" id="cardName" placeholder="Nombre del titular" />
+          </label>
+          <div class="card-row">
+            <label class="form-field small-field">
+              <span>Vencimiento</span>
+              <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" />
+            </label>
+            <label class="form-field small-field">
+              <span>CVC</span>
+              <input type="text" id="cardCvc" placeholder="123" maxlength="4" />
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="cart-footer">
+        <p>Total: <strong id="cartTotal">0,00 MXN</strong></p>
+        <button class="btn btn-primary" id="checkoutButton">Pagar con tarjeta</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=3"></script>
+</body>
+</html>
