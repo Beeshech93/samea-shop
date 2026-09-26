@@ -50,7 +50,7 @@ export async function getSessionUser(req) {
   const token = readCookie(req, SESSION_COOKIE);
   if (!token) return null;
   const rows = await sql`
-    SELECT u.id, u.name, u.email
+    SELECT u.id, u.name, u.email, u.is_admin
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ${hashToken(token)} AND s.expires_at > now()`;
   return rows[0] || null;

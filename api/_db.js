@@ -32,6 +32,7 @@ export function ensureUsersSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`;
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMPTZ`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false`;
     await sql`
       CREATE TABLE IF NOT EXISTS auth_attempts (
         id BIGSERIAL PRIMARY KEY,

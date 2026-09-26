@@ -82,7 +82,7 @@
         <article class="kpi">
           <span>Clientas nuevas</span>
           <strong id="newCustomers">—</strong>
-          <small>Últimos 7 días · requiere clave</small>
+          <small>Últimos 7 días · requiere acceso</small>
         </article>
       </section>
 
@@ -122,13 +122,17 @@
           </div>
           <form class="admin-login" id="adminLogin">
             <label class="form-field">
-              <span>Clave de administración</span>
-              <input type="password" id="adminToken" autocomplete="current-password" placeholder="ADMIN_TOKEN" required />
+              <span>Correo</span>
+              <input type="email" id="adminEmail" autocomplete="email" placeholder="correo@ejemplo.com" required />
+            </label>
+            <label class="form-field">
+              <span>Contraseña</span>
+              <input type="password" id="adminPassword" autocomplete="current-password" placeholder="••••••••" required />
             </label>
             <button class="btn btn-primary" type="submit">Entrar</button>
           </form>
           <div class="admin-session hidden" id="adminSession">
-            <span>Sesión de administración activa en esta pestaña.</span>
+            <span id="adminSessionText">Sesión de administración activa.</span>
             <button class="text-button" id="adminLogout" type="button">Cerrar sesión</button>
           </div>
         </section>
@@ -145,6 +149,7 @@
                   <th>Nombre</th>
                   <th>Correo</th>
                   <th>Registro</th>
+                  <th>Rol</th>
                   <th><span class="sr-only">Acciones</span></th>
                 </tr>
               </thead>
@@ -189,6 +194,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="dashboard.js?v=4"></script>
+  <script src="dashboard.js?v=5"></script>
 </body>
 </html>

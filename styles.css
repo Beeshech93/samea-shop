@@ -2039,3 +2039,9 @@ h3 {
   padding: 0 0.3rem;
   border-radius: 3px;
 }
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

@@ -7,9 +7,8 @@ function parseId(value) {
 }
 
 export default async function handler(req, res) {
-  if (!requireAdmin(req, res)) return;
-
   try {
+    if (!(await requireAdmin(req, res))) return;
     await ensureSchema();
 
     if (req.method === 'GET') {

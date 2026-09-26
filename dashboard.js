@@ -95,7 +95,7 @@ function renderDashboard() {
 function setupControls() {
   document.getElementById('refreshButton').addEventListener('click', () => {
     renderDashboard();
-    if (getToken()) loadProtectedData();
+    if (adminUser) loadProtectedData();
     showToast('Datos actualizados.');
   });
 
@@ -120,37 +120,18 @@ function setupControls() {
 
 // ---------- Moderación de comentarios ----------
 
-const TOKEN_KEY = 'sameaAdminToken';
 const adminLogin = document.getElementById('adminLogin');
 const adminSession = document.getElementById('adminSession');
 const protectedPanels = [document.getElementById('clientas'), document.getElementById('comentarios')];
 const moderationList = document.getElementById('moderationList');
 const commentSummary = document.getElementById('commentSummary');
+let adminUser = null;
 
-function getToken() {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function setToken(token) {
-  try {
-    if (token) sessionStorage.setItem(TOKEN_KEY, token);
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // sessionStorage no disponible: la clave se pedirá de nuevo.
-  }
-}
-
-async function adminRequest(method, body, path = '/api/admin/comments') {
+async function apiRequest(path, method = 'GET', body) {
   const response = await fetch(path, {
     method,
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
+    credentials: 'same-origin',
+    headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await response.json().catch(() => ({}));
@@ -162,7 +143,14 @@ async function adminRequest(method, body, path = '/api/admin/comments') {
   return data;
 }
 
+function adminRequest(method, body, path = '/api/admin/comments') {
+  return apiRequest(path, method, body);
+}
+
 function showModeration(loggedIn) {
+  if (loggedIn && adminUser) {
+    document.getElementById('adminSessionText').textContent = `Sesión iniciada como ${adminUser.name} (${adminUser.email}).`;
+  }
   adminLogin.classList.toggle('hidden', loggedIn);
   adminSession.classList.toggle('hidden', !loggedIn);
   protectedPanels.forEach((panel) => panel.classList.toggle('hidden', !loggedIn));
@@ -186,7 +174,7 @@ async function loadUsers() {
   if (users.length === 0) {
     const row = tbody.insertRow();
     const cell = row.insertCell();
-    cell.colSpan = 4;
+    cell.colSpan = 5;
     cell.className = 'comment-empty';
     cell.textContent = 'Todavía no hay clientas registradas.';
     return;
@@ -200,7 +188,25 @@ async function loadUsers() {
     link.textContent = user.email;
     emailCell.append(link);
     row.insertCell().textContent = new Date(user.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+    const roleCell = row.insertCell();
+    const role = document.createElement('span');
+    role.className = `status ${user.is_admin || user.fixed_admin ? 'status-progress' : ''}`;
+    role.textContent = user.is_admin || user.fixed_admin ? 'Administradora' : 'Clienta';
+    roleCell.append(role);
+
     const actionCell = row.insertCell();
+    actionCell.className = 'row-actions';
+    if (!user.fixed_admin && !(user.is_self && user.is_admin)) {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'text-button';
+      toggle.textContent = user.is_admin ? 'Quitar admin' : 'Hacer admin';
+      toggle.dataset.adminUser = user.id;
+      toggle.dataset.makeAdmin = String(!user.is_admin);
+      toggle.dataset.email = user.email;
+      actionCell.append(toggle);
+    }
+    if (user.is_self) return;
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'text-button';
@@ -213,7 +219,7 @@ async function loadUsers() {
 
 async function loadProtectedData() {
   await loadModeration();
-  if (!getToken()) return;
+  if (!adminUser) return;
   try {
     await loadUsers();
   } catch (error) {
@@ -279,21 +285,51 @@ async function loadModeration() {
     }
     comments.forEach((entry) => moderationList.append(buildModerationItem(entry)));
   } catch (error) {
-    if (error.status === 401) setToken(null);
-    showModeration(false);
+    if (error.status === 401 || error.status === 403) {
+      adminUser = null;
+      showModeration(false);
+    }
     showToast(error.message);
   }
 }
 
-adminLogin.addEventListener('submit', (event) => {
+async function checkAdminSession() {
+  try {
+    const { user } = await apiRequest('/api/auth/me');
+    adminUser = user && user.isAdmin ? user : null;
+    if (user && !user.isAdmin) showToast('Tu cuenta no tiene permisos de administración.');
+  } catch {
+    adminUser = null;
+  }
+  showModeration(Boolean(adminUser));
+  if (adminUser) loadProtectedData();
+}
+
+adminLogin.addEventListener('submit', async (event) => {
   event.preventDefault();
-  setToken(document.getElementById('adminToken').value.trim());
-  adminLogin.reset();
-  loadProtectedData();
+  const button = adminLogin.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    await apiRequest('/api/auth/login', 'POST', {
+      email: document.getElementById('adminEmail').value.trim().toLowerCase(),
+      password: document.getElementById('adminPassword').value,
+    });
+    adminLogin.reset();
+    await checkAdminSession();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
 });
 
-document.getElementById('adminLogout').addEventListener('click', () => {
-  setToken(null);
+document.getElementById('adminLogout').addEventListener('click', async () => {
+  try {
+    await apiRequest('/api/auth/logout', 'POST', {});
+  } catch {
+    // Aunque falle, se oculta el área protegida.
+  }
+  adminUser = null;
   showModeration(false);
 });
 
@@ -319,6 +355,23 @@ moderationList.addEventListener('click', async (event) => {
 
 // Cancelación de datos (derechos ARCO): elimina la cuenta y sus sesiones.
 document.getElementById('usersTable').addEventListener('click', async (event) => {
+  const toggle = event.target.closest('[data-admin-user]');
+  if (toggle) {
+    const makeAdmin = toggle.dataset.makeAdmin === 'true';
+    const question = makeAdmin
+      ? `¿Dar acceso de administración a ${toggle.dataset.email}? Podrá ver clientas y moderar comentarios.`
+      : `¿Quitar el acceso de administración a ${toggle.dataset.email}?`;
+    if (!confirm(question)) return;
+    try {
+      await adminRequest('PATCH', { id: Number(toggle.dataset.adminUser), isAdmin: makeAdmin }, '/api/admin/users');
+      showToast(makeAdmin ? 'Acceso de administración concedido.' : 'Acceso de administración retirado.');
+      await loadUsers();
+    } catch (error) {
+      showToast(error.message);
+    }
+    return;
+  }
+
   const button = event.target.closest('[data-delete-user]');
   if (!button) return;
   if (!confirm(`¿Eliminar definitivamente la cuenta ${button.dataset.email}? No se puede deshacer.`)) return;
@@ -333,4 +386,4 @@ document.getElementById('usersTable').addEventListener('click', async (event) =>
 
 renderDashboard();
 setupControls();
-if (getToken()) loadProtectedData();
+checkAdminSession();
