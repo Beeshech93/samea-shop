@@ -519,9 +519,70 @@ document.addEventListener('keydown', (event) => {
   closeMenu();
 });
 
+// ---------- Comentarios ----------
+
+const commentList = $('commentList');
+const commentForm = $('commentForm');
+
+function renderCommentMessage(message) {
+  commentList.innerHTML = '';
+  const item = document.createElement('li');
+  item.className = 'comment-empty';
+  item.textContent = message;
+  commentList.append(item);
+}
+
+async function loadComments() {
+  try {
+    const response = await fetch('/api/comments');
+    if (!response.ok) throw new Error(response.status);
+    const { comments } = await response.json();
+    if (comments.length === 0) {
+      renderCommentMessage('Aún no hay comentarios. ¡Sé la primera!');
+      return;
+    }
+    commentList.innerHTML = '';
+    comments.forEach((text) => {
+      const item = document.createElement('li');
+      item.className = 'comment';
+      item.textContent = text;
+      commentList.append(item);
+    });
+  } catch {
+    renderCommentMessage('Los comentarios no están disponibles en este momento.');
+  }
+}
+
+commentForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = $('commentInput');
+  const comment = input.value.trim();
+  if (!comment) return;
+
+  const button = commentForm.querySelector('button');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    commentForm.reset();
+    showToast('¡Gracias por tu comentario!');
+    loadComments();
+  } catch (error) {
+    showToast(error.message || 'No se pudo publicar el comentario.');
+  } finally {
+    button.disabled = false;
+  }
+});
+
 $('year').textContent = new Date().getFullYear();
 
 updateAuthState();
 renderCategories();
 renderProducts();
 renderCart();
+loadComments();

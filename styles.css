@@ -752,6 +752,84 @@ h3 {
   flex-shrink: 0;
 }
 
+/* ---------- Comentarios ---------- */
+
+.comments-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.comments-grid h2 {
+  font-size: clamp(2.1rem, 3.6vw, 3rem);
+}
+
+.comment-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-items: start;
+}
+
+.comment-form .form-field {
+  width: 100%;
+}
+
+.form-field textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  font: inherit;
+  resize: vertical;
+}
+
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.comment-form .btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.comment {
+  padding: 1.2rem 1.4rem;
+  background: var(--bg);
+  border-left: 2px solid var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-style: italic;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.comment-empty {
+  padding: 1.2rem 0;
+  color: var(--muted);
+}
+
+@media (max-width: 960px) {
+  .comments-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
 /* ---------- Newsletter ---------- */
 
 .newsletter {
