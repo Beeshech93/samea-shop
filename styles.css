@@ -924,7 +924,7 @@ h3 {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.6fr repeat(3, 1fr);
+  grid-template-columns: 2fr repeat(2, 1fr);
   gap: 2.5rem;
 }
 
@@ -2330,14 +2330,6 @@ h3 {
   .form-grid .span-2 {
     grid-column: auto;
   }
-}
-
-.footer-user {
-  display: block;
-  margin-bottom: 0.55rem;
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-  overflow-wrap: anywhere;
 }
 
 .header-actions a.text-button {

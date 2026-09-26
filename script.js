@@ -573,7 +573,6 @@ function updateAuthState() {
   document.querySelectorAll('[data-guest-only]').forEach((node) => node.classList.toggle('hidden', loggedIn));
   document.querySelectorAll('[data-user-only]').forEach((node) => node.classList.toggle('hidden', !loggedIn));
   document.querySelectorAll('[data-admin-only]').forEach((node) => node.classList.toggle('hidden', !isAdmin));
-  $('footerUser').textContent = loggedIn ? `Conectada como ${currentUser.email}` : '';
 }
 
 async function loadCurrentUser() {
