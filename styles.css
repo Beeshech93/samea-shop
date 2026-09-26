@@ -2331,3 +2331,15 @@ h3 {
     grid-column: auto;
   }
 }
+
+.footer-user {
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.header-actions a.text-button {
+  margin-right: 0.3rem;
+}

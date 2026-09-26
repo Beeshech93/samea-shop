@@ -563,10 +563,17 @@ async function authRequest(path, body) {
 }
 
 function updateAuthState() {
-  authStatus.classList.toggle('hidden', !currentUser);
-  logoutButton.classList.toggle('hidden', !currentUser);
-  loginButton.classList.toggle('hidden', Boolean(currentUser));
-  authUserName.textContent = currentUser ? currentUser.name.split(' ')[0] : '';
+  const loggedIn = Boolean(currentUser);
+  const isAdmin = Boolean(currentUser?.isAdmin);
+  authStatus.classList.toggle('hidden', !loggedIn);
+  logoutButton.classList.toggle('hidden', !loggedIn);
+  loginButton.classList.toggle('hidden', loggedIn);
+  authUserName.textContent = loggedIn ? currentUser.name.split(' ')[0] : '';
+
+  document.querySelectorAll('[data-guest-only]').forEach((node) => node.classList.toggle('hidden', loggedIn));
+  document.querySelectorAll('[data-user-only]').forEach((node) => node.classList.toggle('hidden', !loggedIn));
+  document.querySelectorAll('[data-admin-only]').forEach((node) => node.classList.toggle('hidden', !isAdmin));
+  $('footerUser').textContent = loggedIn ? `Conectada como ${currentUser.email}` : '';
 }
 
 async function loadCurrentUser() {
@@ -586,6 +593,7 @@ async function submitAuth(form, path, body, welcome) {
     const { user } = await authRequest(path, body);
     currentUser = user;
     updateAuthState();
+    loadCurrentUser(); // trae el rol (isAdmin) de la sesión recién creada
     closeAuthModal();
     form.reset();
     showToast(welcome(user));
@@ -742,7 +750,7 @@ $('cardNumber').addEventListener('input', formatCardInput);
 $('cardExpiry').addEventListener('input', formatExpiryInput);
 
 loginButton.addEventListener('click', () => openAuthModal('login'));
-logoutButton.addEventListener('click', async () => {
+async function handleLogout() {
   try {
     await authRequest('/api/auth/logout', {});
     currentUser = null;
@@ -751,7 +759,9 @@ logoutButton.addEventListener('click', async () => {
   } catch (error) {
     showToast(error.message);
   }
-});
+}
+logoutButton.addEventListener('click', handleLogout);
+document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', handleLogout));
 $('closeAuthButton').addEventListener('click', closeAuthModal);
 authModal.addEventListener('click', (event) => {
   if (event.target === authModal) closeAuthModal();
