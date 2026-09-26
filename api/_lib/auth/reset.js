@@ -1,6 +1,6 @@
-import { sql, ensureUsersSchema } from '../../api/_db.js';
-import { consumePasswordReset, createSession, hashPassword } from '../../api/_auth.js';
-import { clientIp, isLimited, recordAttempt, tooMany } from '../../api/_ratelimit.js';
+import { sql, ensureUsersSchema } from '../../_db.js';
+import { consumePasswordReset, createSession, hashPassword } from '../../_auth.js';
+import { clientIp, isLimited, recordAttempt, tooMany } from '../../_ratelimit.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

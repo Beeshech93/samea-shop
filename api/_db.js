@@ -58,3 +58,17 @@ export function ensureUsersSchema() {
   });
   return usersReady;
 }
+
+let newsletterReady;
+export function ensureNewsletterSchema() {
+  newsletterReady ??= sql`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`.catch((error) => {
+    newsletterReady = undefined;
+    throw error;
+  });
+  return newsletterReady;
+}

@@ -4,5 +4,12 @@
   "type": "module",
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0"
+  },
+  "scripts": {
+    "check": "find api tests script.js dashboard.js dashboard-catalog.js -name '*.js' -exec sh -c 'for f; do node --check \"$f\" || exit 1; done' sh {} +",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

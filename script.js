@@ -54,13 +54,20 @@ const FALLBACK_PRODUCTS = [
   },
 ];
 
-let products = FALLBACK_PRODUCTS.map((product) => ({
-  ...product,
-  discountPercent: 0,
-  finalPrice: product.price,
-  sizes: [],
-  inStock: true,
-}));
+// Se llena con /api/products. No se muestra nada hasta que llega, para no
+// enseñar precios o tallas antiguos que luego cambien.
+let products = [];
+let catalogLoaded = false;
+
+function fallbackCatalog() {
+  return FALLBACK_PRODUCTS.map((product) => ({
+    ...product,
+    discountPercent: 0,
+    finalPrice: product.price,
+    sizes: [],
+    inStock: true,
+  }));
+}
 
 let categoryNames = {
   sujetadores: 'Sujetadores',
@@ -175,6 +182,10 @@ function renderProducts() {
     ? products
     : products.filter((product) => product.category === activeFilter);
 
+  if (!catalogLoaded) {
+    productGrid.innerHTML = '<p class="comment-empty">Cargando colección…</p>';
+    return;
+  }
   if (visible.length === 0) {
     productGrid.innerHTML = '<p class="comment-empty">No hay productos en esta categoría todavía.</p>';
     return;
@@ -239,11 +250,13 @@ async function loadProducts() {
       if (!fresh) cart.splice(i, 1);
       else Object.assign(cart[i], { name: fresh.name, image: fresh.image, finalPrice: fresh.finalPrice });
     }
-    renderCatalog();
-    renderCart();
   } catch {
-    // Sin API (local): se mantiene el catálogo de respaldo.
+    // Sin API (p. ej. en local): catálogo de respaldo, sin tallas ni descuentos.
+    products = fallbackCatalog();
   }
+  catalogLoaded = true;
+  renderCatalog();
+  renderCart();
 }
 
 // ---------- Carrito ----------
@@ -776,10 +789,26 @@ authModal.addEventListener('click', (event) => {
   if (link) showAuthView(link.dataset.authView);
 });
 
-$('newsletterForm').addEventListener('submit', (event) => {
+$('newsletterForm').addEventListener('submit', async (event) => {
   event.preventDefault();
-  event.target.reset();
-  showToast('¡Gracias! Te escribiremos pronto.');
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/newsletter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('newsletterEmail').value.trim() }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'No se pudo completar la suscripción.');
+    form.reset();
+    showToast('¡Gracias por suscribirte! Usa el código APP10 para tu 10% de descuento.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
 });
 
 document.addEventListener('keydown', (event) => {

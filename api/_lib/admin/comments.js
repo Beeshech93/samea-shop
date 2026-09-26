@@ -1,5 +1,5 @@
-import { sql, ensureSchema } from '../../api/_db.js';
-import { requireAdmin } from '../../api/_admin.js';
+import { sql, ensureSchema } from '../../_db.js';
+import { requireAdmin } from '../../_admin.js';
 
 function parseId(value) {
   const id = Number(value);

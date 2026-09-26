@@ -1,28 +1,9 @@
-const dashboardOrders = [
-  { id: 'S1012', customer: 'María López', status: 'En preparación', total: 459.00 },
-  { id: 'S1013', customer: 'Ana Torres', status: 'Enviado', total: 289.00 },
-  { id: 'S1014', customer: 'Lucía Sánchez', status: 'Pendiente pago', total: 379.00 },
-];
-
-// Datos de ejemplo hasta que una administradora inicia sesión;
-// después se sustituyen por el stock real de la base.
-let inventoryItems = [
-  { id: 1, name: 'Tanga de encaje blanca', stock: 12 },
-  { id: 2, name: 'Body Seducción Negro', stock: 6 },
-  { id: 3, name: 'Braga Encaje Nude', stock: 18 },
-  { id: 4, name: 'Sujetador Básico Blanco', stock: 3 },
-  { id: 5, name: 'Conjunto Satén Vainilla', stock: 7 },
-  { id: 6, name: 'Top Bralette Lavanda', stock: 5 },
-];
+// Se llena con el stock real cuando una administradora inicia sesión
+// (dashboard-catalog.js). No se muestran datos de ejemplo.
+let inventoryItems = [];
 
 const LOW_STOCK = 5;
 const STOCK_SCALE = 20;
-
-const statusClass = {
-  Enviado: 'status-ok',
-  'En preparación': 'status-progress',
-  'Pendiente pago': 'status-warn',
-};
 
 function formatCurrency(value) {
   return value.toLocaleString('es-MX', {
@@ -48,68 +29,55 @@ function greeting() {
   return 'Buenas noches';
 }
 
+function setText(id, value) {
+  document.getElementById(id).textContent = value;
+}
+
+// Inventario y KPI de stock (llamado por dashboard-catalog.js al cargar productos).
 function renderDashboard() {
-  const todayRevenue = dashboardOrders.reduce((sum, order) => sum + order.total, 0);
   const lowStock = inventoryItems.filter((item) => item.stock <= LOW_STOCK).length;
+  setText('stockCount', inventoryItems.reduce((sum, item) => sum + item.stock, 0));
+  setText('lowStockCount', `${lowStock} con stock bajo`);
 
-  document.querySelector('.admin-topbar h1').textContent = greeting();
-  document.getElementById('todayRevenue').textContent = formatCurrency(todayRevenue);
-  document.getElementById('orderCount').textContent = `${dashboardOrders.length} pedidos`;
-  document.getElementById('pendingOrders').textContent = dashboardOrders.filter((order) => order.status !== 'Enviado').length;
-  document.getElementById('stockCount').textContent = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
-  document.getElementById('lowStockCount').textContent = `${lowStock} con stock bajo`;
-
-  document.getElementById('ordersTable').innerHTML = dashboardOrders
-    .map(
-      (order) => `
-        <tr>
-          <td><strong>#${order.id}</strong></td>
-          <td>${order.customer}</td>
-          <td><span class="status ${statusClass[order.status] || ''}">${order.status}</span></td>
-          <td>${formatCurrency(order.total)}</td>
-        </tr>
-      `
-    )
-    .join('');
-
-  document.getElementById('inventoryList').innerHTML = inventoryItems
-    .map((item) => {
+  const list = document.getElementById('inventoryList');
+  list.innerHTML = '';
+  if (inventoryItems.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'comment-empty';
+    empty.textContent = 'Todavía no hay productos.';
+    list.append(empty);
+  }
+  [...inventoryItems]
+    .sort((a, b) => a.stock - b.stock)
+    .forEach((item) => {
       const low = item.stock <= LOW_STOCK;
-      const width = Math.min(100, (item.stock / STOCK_SCALE) * 100);
-      return `
-        <li>
-          <div class="inventory-row">
-            <span>${item.name}</span>
-            <strong class="${low ? 'low' : ''}">${item.stock} u.</strong>
-          </div>
-          <div class="stock-track"><div class="stock-bar ${low ? 'low' : ''}" style="width:${width}%"></div></div>
-        </li>
-      `;
-    })
-    .join('');
+      const li = document.createElement('li');
+      const row = document.createElement('div');
+      row.className = 'inventory-row';
+      const name = document.createElement('span');
+      name.textContent = item.name;
+      const stock = document.createElement('strong');
+      stock.className = low ? 'low' : '';
+      stock.textContent = `${item.stock} u.`;
+      row.append(name, stock);
+      const track = document.createElement('div');
+      track.className = 'stock-track';
+      const bar = document.createElement('div');
+      bar.className = `stock-bar${low ? ' low' : ''}`;
+      bar.style.width = `${Math.min(100, (item.stock / STOCK_SCALE) * 100)}%`;
+      track.append(bar);
+      li.append(row, track);
+      list.append(li);
+    });
 
-  document.getElementById('lastUpdated').textContent = new Date().toLocaleString('es-MX', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
+  setText('lastUpdated', new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }));
 }
 
 function setupControls() {
-  document.getElementById('refreshButton').addEventListener('click', () => {
-    renderDashboard();
-    if (adminUser) loadProtectedData();
+  document.getElementById('refreshButton').addEventListener('click', async () => {
+    if (!adminUser) return;
+    await loadProtectedData();
     showToast('Datos actualizados.');
-  });
-
-  const toggles = {
-    maintenanceToggle: 'Modo mantenimiento',
-    notificationsToggle: 'Notificaciones',
-    stockAlertsToggle: 'Alertas de stock bajo',
-  };
-  Object.entries(toggles).forEach(([id, label]) => {
-    document.getElementById(id).addEventListener('change', (event) => {
-      showToast(`${label} ${event.target.checked ? 'activado' : 'desactivado'}.`);
-    });
   });
 
   const navLinks = document.querySelectorAll('.admin-nav a[href^="#"]');
@@ -150,8 +118,14 @@ function adminRequest(method, body, path = '/api/admin/comments') {
 }
 
 function showModeration(loggedIn) {
+  document.body.classList.toggle('is-locked', !loggedIn);
   if (loggedIn && adminUser) {
-    document.getElementById('adminSessionText').textContent = `Sesión iniciada como ${adminUser.name} (${adminUser.email}).`;
+    setText('adminSessionText', `Sesión iniciada como ${adminUser.name} (${adminUser.email}).`);
+    setText('greeting', `${greeting()}, ${adminUser.name.split(' ')[0]}`);
+    setText('topbarText', 'Productos, promociones, clientas y comentarios de samea.shop.');
+  } else {
+    setText('greeting', 'Panel de administración');
+    setText('topbarText', 'Inicia sesión con tu cuenta de administradora para gestionar la tienda.');
   }
   adminLogin.classList.toggle('hidden', loggedIn);
   adminSession.classList.toggle('hidden', !loggedIn);
@@ -161,15 +135,17 @@ function showModeration(loggedIn) {
     moderationList.innerHTML = '';
     document.getElementById('userSummary').textContent = '';
     document.getElementById('usersTable').innerHTML = '';
+    document.getElementById('subscribersTable').innerHTML = '';
+    inventoryItems = [];
   }
 }
 
 async function loadUsers() {
   const { users } = await adminRequest('GET', null, '/api/admin/users');
-  document.getElementById('userSummary').textContent = `${users.length} ${users.length === 1 ? 'clienta' : 'clientas'}`;
-  document.getElementById('newCustomers').textContent = users.filter(
-    (user) => Date.now() - new Date(user.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
-  ).length;
+  const recent = users.filter((user) => Date.now() - new Date(user.created_at).getTime() < 7 * 24 * 60 * 60 * 1000).length;
+  setText('userSummary', `${users.length} ${users.length === 1 ? 'cuenta' : 'cuentas'}`);
+  setText('kpiUsers', users.length);
+  setText('newCustomers', `${recent} en los últimos 7 días`);
 
   const tbody = document.getElementById('usersTable');
   tbody.innerHTML = '';
@@ -219,15 +195,71 @@ async function loadUsers() {
   });
 }
 
-async function loadProtectedData() {
-  await loadModeration();
-  if (!adminUser) return;
-  if (typeof loadCatalogAdmin === 'function') loadCatalogAdmin();
+// ---------- Boletín ----------
+
+let subscribers = [];
+
+async function loadSubscribers() {
+  ({ subscribers } = await adminRequest('GET', null, '/api/admin/subscribers'));
+  setText('subscriberSummary', `${subscribers.length} ${subscribers.length === 1 ? 'suscriptora' : 'suscriptoras'}`);
+  const tbody = document.getElementById('subscribersTable');
+  tbody.innerHTML = '';
+  if (subscribers.length === 0) {
+    const cell = tbody.insertRow().insertCell();
+    cell.colSpan = 3;
+    cell.className = 'comment-empty';
+    cell.textContent = 'Todavía no hay suscripciones.';
+    return;
+  }
+  subscribers.forEach((entry) => {
+    const row = tbody.insertRow();
+    row.insertCell().textContent = entry.email;
+    row.insertCell().textContent = new Date(entry.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+    const actions = row.insertCell();
+    actions.className = 'row-actions';
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'text-button';
+    remove.textContent = 'Dar de baja';
+    remove.dataset.unsubscribe = entry.id;
+    remove.dataset.email = entry.email;
+    actions.append(remove);
+  });
+}
+
+document.getElementById('subscribersTable').addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-unsubscribe]');
+  if (!button || !confirm(`¿Dar de baja a ${button.dataset.email} del boletín?`)) return;
   try {
-    await loadUsers();
+    await adminRequest('DELETE', { id: Number(button.dataset.unsubscribe) }, '/api/admin/subscribers');
+    showToast('Suscripción eliminada.');
+    await loadSubscribers();
   } catch (error) {
     showToast(error.message);
   }
+});
+
+document.getElementById('copySubscribers').addEventListener('click', async () => {
+  if (subscribers.length === 0) {
+    showToast('No hay correos que copiar.');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(subscribers.map((entry) => entry.email).join(', '));
+    showToast(`${subscribers.length} correos copiados.`);
+  } catch {
+    showToast('No se pudo copiar. Selecciona los correos de la tabla.');
+  }
+});
+
+async function loadProtectedData() {
+  await loadModeration();
+  if (!adminUser) return;
+  const tasks = [loadUsers(), loadSubscribers()];
+  if (typeof loadCatalogAdmin === 'function') tasks.push(loadCatalogAdmin());
+  const results = await Promise.allSettled(tasks);
+  const failed = results.find((result) => result.status === 'rejected');
+  if (failed) showToast(failed.reason.message);
 }
 
 function buildModerationItem(entry) {
@@ -278,6 +310,7 @@ async function loadModeration() {
     showModeration(true);
     const pending = comments.filter((c) => !c.approved).length;
     commentSummary.textContent = `${pending} pendientes · ${comments.length} en total`;
+    setText('kpiPending', pending);
     moderationList.innerHTML = '';
     if (comments.length === 0) {
       const empty = document.createElement('li');
@@ -387,6 +420,5 @@ document.getElementById('usersTable').addEventListener('click', async (event) =>
   }
 });
 
-renderDashboard();
 setupControls();
 checkAdminSession();

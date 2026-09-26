@@ -1,6 +1,6 @@
-import { sql, ensureUsersSchema } from '../../api/_db.js';
-import { createSession, hashPassword, verifyPassword } from '../../api/_auth.js';
-import { clearAttempts, clientIp, isLimited, recordAttempt } from '../../api/_ratelimit.js';
+import { sql, ensureUsersSchema } from '../../_db.js';
+import { createSession, hashPassword, verifyPassword } from '../../_auth.js';
+import { clearAttempts, clientIp, isLimited, recordAttempt } from '../../_ratelimit.js';
 
 const WINDOW_MINUTES = 15;
 const MAX_PER_EMAIL = 5;

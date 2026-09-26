@@ -1,5 +1,5 @@
-import { ensureUsersSchema } from '../../api/_db.js';
-import { destroySession } from '../../api/_auth.js';
+import { ensureUsersSchema } from '../../_db.js';
+import { destroySession } from '../../_auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

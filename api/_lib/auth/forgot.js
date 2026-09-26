@@ -1,7 +1,7 @@
-import { sql, ensureUsersSchema } from '../../api/_db.js';
-import { createPasswordReset } from '../../api/_auth.js';
-import { escapeHtml, mailConfigured, sendMail } from '../../api/_mail.js';
-import { clientIp, isLimited, recordAttempt, tooMany } from '../../api/_ratelimit.js';
+import { sql, ensureUsersSchema } from '../../_db.js';
+import { createPasswordReset } from '../../_auth.js';
+import { escapeHtml, mailConfigured, sendMail } from '../../_mail.js';
+import { clientIp, isLimited, recordAttempt, tooMany } from '../../_ratelimit.js';
 
 const SITE_URL = (process.env.SITE_URL || 'https://samea-shop.vercel.app').replace(/\/$/, '');
 const GENERIC_REPLY = 'Si el correo está registrado, te enviamos un enlace para cambiar tu contraseña.';

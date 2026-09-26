@@ -1,4 +1,5 @@
-import { sql, ensureSchema } from './_db.js';
+import { sql, ensureSchema, ensureUsersSchema } from './_db.js';
+import { clientIp, isLimited, recordAttempt, tooMany } from './_ratelimit.js';
 
 const MAX_COMMENT = 500;
 const MAX_NAME = 60;
@@ -29,6 +30,14 @@ export default async function handler(req, res) {
       if (!comment || comment.length > MAX_COMMENT) {
         return res.status(400).json({ error: `El comentario debe tener entre 1 y ${MAX_COMMENT} caracteres.` });
       }
+
+      // Límite anti-spam: 5 comentarios por IP cada 30 minutos.
+      await ensureUsersSchema();
+      const ipKey = `comment:ip:${clientIp(req)}`;
+      if (await isLimited([{ key: ipKey, limit: 5, minutes: 30 }])) {
+        return tooMany(res, 30);
+      }
+      await recordAttempt(ipKey);
 
       await sql`INSERT INTO comments (name, product_id, comment) VALUES (${name}, ${productId}, ${comment})`;
       return res.status(201).json({ ok: true, pending: true });

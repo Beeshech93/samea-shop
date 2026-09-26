@@ -1757,72 +1757,6 @@ h3 {
   background: var(--danger);
 }
 
-.controls {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  align-items: stretch;
-}
-
-.toggle-field {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-}
-
-.toggle-field > span:first-child {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.toggle-field input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: relative;
-  flex-shrink: 0;
-  width: 40px;
-  height: 22px;
-  border-radius: 999px;
-  background: var(--blush-deep);
-  transition: background 0.25s;
-}
-
-.slider::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.25s var(--ease);
-}
-
-.toggle-field input:checked + .slider {
-  background: var(--ink);
-}
-
-.toggle-field input:checked + .slider::after {
-  transform: translateX(18px);
-}
-
-.toggle-field input:focus-visible + .slider {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
-}
-
 @media (max-width: 1100px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1869,9 +1803,6 @@ h3 {
     padding: 1.5rem 1rem 2.5rem;
   }
 
-  .controls {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 480px) {
@@ -2334,4 +2265,36 @@ h3 {
 
 .header-actions a.text-button {
   margin-right: 0.3rem;
+}
+
+.newsletter-note {
+  flex-basis: 100%;
+  margin: -0.8rem 0 0;
+  text-align: right;
+}
+
+/* En pantallas táctiles no hay "hover": el botón de añadir siempre visible. */
+@media (hover: none) {
+  .quick-add {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .newsletter-note {
+    text-align: left;
+    margin-top: 0;
+  }
+}
+
+/* Sin sesión solo se ve el acceso: se ocultan los enlaces a secciones protegidas. */
+body.is-locked .admin-nav a[href^="#"] {
+  display: none;
+}
+
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }

@@ -1,6 +1,6 @@
-import { sql } from '../../api/_db.js';
-import { requireAdmin } from '../../api/_admin.js';
-import { adminProduct, ensureCatalogSchema, validateProduct } from '../../api/_catalog.js';
+import { sql } from '../../_db.js';
+import { requireAdmin } from '../../_admin.js';
+import { adminProduct, ensureCatalogSchema, validateProduct } from '../../_catalog.js';
 
 function parseId(value) {
   const id = Number(value);

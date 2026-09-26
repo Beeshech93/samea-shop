@@ -1,6 +1,0 @@
-[build]
-  command = "echo 'skip build'"
-  publish = "."
-
-[dev]
-  command = "echo 'skip build'"

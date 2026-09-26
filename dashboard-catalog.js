@@ -42,7 +42,9 @@ function emptyRow(tbody, colSpan, message) {
 
 function syncInventory() {
   inventoryItems = adminProducts.map((product) => ({ id: product.id, name: product.name, stock: product.stock }));
-  document.getElementById('inventoryNote').textContent = 'Stock real · bajo: ≤ 5 u.';
+  const visible = adminProducts.filter((product) => product.active).length;
+  setText('kpiProducts', visible);
+  setText('kpiProductsNote', `${adminProducts.length - visible} ocultos · ${adminProducts.length} en total`);
   renderDashboard();
 }
 
@@ -254,6 +256,8 @@ async function loadAdminPromotions() {
   const { promotions } = await adminRequest('GET', null, '/api/admin/promotions');
   adminPromotions = promotions;
   renderPromosTable();
+  const active = adminPromotions.filter((promo) => promoState(promo)[0] === 'Activa').length;
+  setText('kpiPromos', `${active} ${active === 1 ? 'promoción activa' : 'promociones activas'}`);
 }
 
 function promoBody(promo) {
@@ -354,10 +358,6 @@ document.querySelectorAll('[data-cancel-form]').forEach((button) => {
 });
 
 // Llamada desde dashboard.js cuando una administradora inicia sesión.
-async function loadCatalogAdmin() {
-  try {
-    await Promise.all([loadAdminProducts(), loadAdminPromotions()]);
-  } catch (error) {
-    showToast(error.message);
-  }
+function loadCatalogAdmin() {
+  return Promise.all([loadAdminProducts(), loadAdminPromotions()]);
 }

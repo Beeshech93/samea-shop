@@ -1,10 +1,10 @@
 // Una sola función para todas las rutas /api/auth/* (límite de funciones de Vercel).
-import login from '../../lib/auth/login.js';
-import logout from '../../lib/auth/logout.js';
-import me from '../../lib/auth/me.js';
-import register from '../../lib/auth/register.js';
-import forgot from '../../lib/auth/forgot.js';
-import reset from '../../lib/auth/reset.js';
+import login from '../_lib/auth/login.js';
+import logout from '../_lib/auth/logout.js';
+import me from '../_lib/auth/me.js';
+import register from '../_lib/auth/register.js';
+import forgot from '../_lib/auth/forgot.js';
+import reset from '../_lib/auth/reset.js';
 
 const routes = { login, logout, me, register, forgot, reset };
 

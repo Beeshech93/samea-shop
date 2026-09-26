@@ -1,6 +1,6 @@
-import { ensureUsersSchema } from '../../api/_db.js';
-import { getSessionUser } from '../../api/_auth.js';
-import { isAdminUser } from '../../api/_admin.js';
+import { ensureUsersSchema } from '../../_db.js';
+import { getSessionUser } from '../../_auth.js';
+import { isAdminUser } from '../../_admin.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');

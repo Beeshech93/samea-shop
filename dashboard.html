@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
-<body>
+<body class="is-locked">
   <div class="admin">
     <aside class="admin-sidebar">
       <a href="index.html" class="wordmark" aria-label="Ir a la tienda">
@@ -22,10 +22,6 @@
         <a href="#resumen" class="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>
           Resumen
-        </a>
-        <a href="#pedidos">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
-          Pedidos
         </a>
         <a href="#inventario">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
@@ -43,13 +39,13 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2" /></svg>
           Clientas
         </a>
+        <a href="#boletin">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1" /><path d="m3 7 9 6 9-6" /></svg>
+          Boletín
+        </a>
         <a href="#comentarios">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z" /></svg>
           Comentarios
-        </a>
-        <a href="#ajustes">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></svg>
-          Ajustes
         </a>
         <a href="index.html">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v11H3z" /><path d="M9 21v-7h6v7" /></svg>
@@ -65,68 +61,40 @@
       <header class="admin-topbar" id="resumen">
         <div>
           <p class="eyebrow">Panel de control</p>
-          <h1>Buenos días</h1>
-          <p>Resumen de ventas, pedidos e inventario de samea.shop.</p>
+          <h1 id="greeting">Panel de administración</h1>
+          <p id="topbarText">Inicia sesión con tu cuenta de administradora para gestionar la tienda.</p>
         </div>
-        <button class="btn btn-primary" id="refreshButton" type="button">Actualizar datos</button>
+        <button class="btn btn-primary hidden" id="refreshButton" type="button" data-protected>Actualizar datos</button>
       </header>
 
-      <section class="kpi-grid" aria-label="Indicadores">
+      <section class="kpi-grid hidden" aria-label="Indicadores" data-protected>
         <article class="kpi">
-          <span>Ingresos hoy</span>
-          <strong id="todayRevenue">$0</strong>
-          <small id="orderCount">0 pedidos</small>
-        </article>
-        <article class="kpi">
-          <span>Pedidos pendientes</span>
-          <strong id="pendingOrders">0</strong>
-          <small>Por preparar o cobrar</small>
+          <span>Productos visibles</span>
+          <strong id="kpiProducts">—</strong>
+          <small id="kpiProductsNote">&nbsp;</small>
         </article>
         <article class="kpi">
           <span>Unidades en stock</span>
-          <strong id="stockCount">0</strong>
-          <small id="lowStockCount">0 con stock bajo</small>
+          <strong id="stockCount">—</strong>
+          <small id="lowStockCount">&nbsp;</small>
         </article>
         <article class="kpi">
-          <span>Clientas nuevas</span>
-          <strong id="newCustomers">—</strong>
-          <small>Últimos 7 días · requiere acceso</small>
+          <span>Clientas registradas</span>
+          <strong id="kpiUsers">—</strong>
+          <small id="newCustomers">&nbsp;</small>
+        </article>
+        <article class="kpi">
+          <span>Comentarios pendientes</span>
+          <strong id="kpiPending">—</strong>
+          <small id="kpiPromos">&nbsp;</small>
         </article>
       </section>
 
       <div class="admin-grid">
-        <section class="panel" id="pedidos">
-          <div class="panel-head">
-            <h2>Pedidos recientes</h2>
-            <span>Hoy</span>
-          </div>
-          <div class="table-wrap">
-            <table class="orders-table">
-              <thead>
-                <tr>
-                  <th>Pedido</th>
-                  <th>Clienta</th>
-                  <th>Estado</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="ordersTable"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="panel" id="inventario">
-          <div class="panel-head">
-            <h2>Inventario</h2>
-            <span id="inventoryNote">Datos de ejemplo · bajo: ≤ 5 u.</span>
-          </div>
-          <ul class="inventory-list" id="inventoryList"></ul>
-        </section>
-
         <section class="panel panel-wide" id="acceso">
           <div class="panel-head">
-            <h2>Área protegida</h2>
-            <span>Clientas y comentarios</span>
+            <h2>Acceso</h2>
+            <span>Solo administradoras</span>
           </div>
           <form class="admin-login" id="adminLogin">
             <label class="form-field">
@@ -143,6 +111,14 @@
             <span id="adminSessionText">Sesión de administración activa.</span>
             <button class="text-button" id="adminLogout" type="button">Cerrar sesión</button>
           </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="inventario" data-protected>
+          <div class="panel-head">
+            <h2>Inventario</h2>
+            <span>Stock bajo: ≤ 5 u.</span>
+          </div>
+          <ul class="inventory-list" id="inventoryList"></ul>
         </section>
 
         <section class="panel panel-wide hidden" id="productos" data-protected>
@@ -325,6 +301,28 @@
           </div>
         </section>
 
+        <section class="panel panel-wide hidden" id="boletin" data-protected>
+          <div class="panel-head">
+            <h2>Suscriptoras del boletín</h2>
+            <div class="panel-head-actions">
+              <span id="subscriberSummary"></span>
+              <button class="btn btn-ghost btn-small" id="copySubscribers" type="button">Copiar correos</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Correo</th>
+                  <th>Fecha</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="subscribersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="panel panel-wide hidden" id="comentarios" data-protected>
           <div class="panel-head">
             <h2>Comentarios</h2>
@@ -332,36 +330,13 @@
           </div>
           <ul class="moderation-list" id="moderationList"></ul>
         </section>
-
-        <section class="panel panel-wide" id="ajustes">
-          <div class="panel-head">
-            <h2>Controles rápidos</h2>
-          </div>
-          <div class="controls">
-            <label class="toggle-field">
-              <span>Modo mantenimiento</span>
-              <input type="checkbox" id="maintenanceToggle" />
-              <span class="slider"></span>
-            </label>
-            <label class="toggle-field">
-              <span>Notificaciones activas</span>
-              <input type="checkbox" id="notificationsToggle" checked />
-              <span class="slider"></span>
-            </label>
-            <label class="toggle-field">
-              <span>Alertas de stock bajo</span>
-              <input type="checkbox" id="stockAlertsToggle" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
-        </section>
       </div>
     </main>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="dashboard.js?v=6"></script>
-  <script src="dashboard-catalog.js?v=1"></script>
+  <script src="dashboard.js?v=7"></script>
+  <script src="dashboard-catalog.js?v=2"></script>
 </body>
 </html>
