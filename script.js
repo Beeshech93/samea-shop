@@ -347,85 +347,94 @@ function switchToRegister() {
   loginTab.classList.remove('active');
 }
 
-function getStoredUsers() {
-  return JSON.parse(localStorage.getItem('sameaUsers') || '[]');
-}
-
-function setStoredUsers(users) {
-  localStorage.setItem('sameaUsers', JSON.stringify(users));
-}
-
-function getCurrentUser() {
-  return JSON.parse(localStorage.getItem('sameaCurrentUser') || 'null');
-}
-
-function setCurrentUser(user) {
-  localStorage.setItem('sameaCurrentUser', JSON.stringify(user));
-}
-
-function clearCurrentUser() {
+// Las cuentas viven en el servidor (Neon). Borra los datos que la versión
+// anterior guardaba en este navegador, incluidas contraseñas sin cifrar.
+try {
+  localStorage.removeItem('sameaUsers');
   localStorage.removeItem('sameaCurrentUser');
+} catch {
+  // Almacenamiento no disponible: nada que limpiar.
+}
+
+let currentUser = null;
+
+async function authRequest(path, body) {
+  const response = await fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: 'same-origin',
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'No se pudo conectar con el servidor.');
+  return data;
 }
 
 function updateAuthState() {
-  const currentUser = getCurrentUser();
   authStatus.classList.toggle('hidden', !currentUser);
   logoutButton.classList.toggle('hidden', !currentUser);
   loginButton.classList.toggle('hidden', Boolean(currentUser));
   authUserName.textContent = currentUser ? currentUser.name.split(' ')[0] : '';
 }
 
+async function loadCurrentUser() {
+  try {
+    const { user } = await authRequest('/api/auth/me');
+    currentUser = user;
+  } catch {
+    currentUser = null;
+  }
+  updateAuthState();
+}
+
+async function submitAuth(form, path, body, welcome) {
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const { user } = await authRequest(path, body);
+    currentUser = user;
+    updateAuthState();
+    closeAuthModal();
+    form.reset();
+    showToast(welcome(user));
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function handleLogin(event) {
   event.preventDefault();
   const email = $('loginEmail').value.trim().toLowerCase();
-  const password = $('loginPassword').value.trim();
+  const password = $('loginPassword').value;
   if (!email || !password) {
     showToast('Completa correo y contraseña.');
     return;
   }
-
-  const user = getStoredUsers().find((item) => item.email === email && item.password === password);
-  if (!user) {
-    showToast('Correo o contraseña incorrectos.');
-    return;
-  }
-
-  setCurrentUser({ name: user.name, email: user.email });
-  updateAuthState();
-  closeAuthModal();
-  loginForm.reset();
-  showToast(`Bienvenida, ${user.name}.`);
+  submitAuth(loginForm, '/api/auth/login', { email, password }, (user) => `Bienvenida, ${user.name}.`);
 }
 
 function handleRegister(event) {
   event.preventDefault();
   const name = $('registerName').value.trim();
   const email = $('registerEmail').value.trim().toLowerCase();
-  const password = $('registerPassword').value.trim();
-  const confirmPassword = $('registerPasswordConfirm').value.trim();
+  const password = $('registerPassword').value;
+  const confirmPassword = $('registerPasswordConfirm').value;
 
   if (!name || !email || !password || !confirmPassword) {
     showToast('Completa todos los campos.');
+    return;
+  }
+  if (password.length < 8) {
+    showToast('La contraseña debe tener al menos 8 caracteres.');
     return;
   }
   if (password !== confirmPassword) {
     showToast('Las contraseñas no coinciden.');
     return;
   }
-
-  const users = getStoredUsers();
-  if (users.some((item) => item.email === email)) {
-    showToast('Ya existe una cuenta con ese correo.');
-    return;
-  }
-
-  users.push({ name, email, password });
-  setStoredUsers(users);
-  setCurrentUser({ name, email });
-  updateAuthState();
-  closeAuthModal();
-  registerForm.reset();
-  showToast(`Cuenta creada. Bienvenida, ${name}.`);
+  submitAuth(registerForm, '/api/auth/register', { name, email, password }, (user) => `Cuenta creada. Bienvenida, ${user.name}.`);
 }
 
 // ---------- Menú móvil ----------
@@ -492,10 +501,15 @@ $('cardNumber').addEventListener('input', formatCardInput);
 $('cardExpiry').addEventListener('input', formatExpiryInput);
 
 loginButton.addEventListener('click', () => openAuthModal('login'));
-logoutButton.addEventListener('click', () => {
-  clearCurrentUser();
-  updateAuthState();
-  showToast('Has cerrado sesión.');
+logoutButton.addEventListener('click', async () => {
+  try {
+    await authRequest('/api/auth/logout', {});
+    currentUser = null;
+    updateAuthState();
+    showToast('Has cerrado sesión.');
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 $('closeAuthButton').addEventListener('click', closeAuthModal);
 authModal.addEventListener('click', (event) => {
@@ -605,6 +619,7 @@ commentForm.addEventListener('submit', async (event) => {
 $('year').textContent = new Date().getFullYear();
 
 updateAuthState();
+loadCurrentUser();
 renderCategories();
 renderProducts();
 renderCart();

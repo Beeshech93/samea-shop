@@ -31,6 +31,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
           Inventario
         </a>
+        <a href="#clientas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2" /></svg>
+          Clientas
+        </a>
         <a href="#comentarios">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z" /></svg>
           Comentarios
@@ -77,8 +81,8 @@
         </article>
         <article class="kpi">
           <span>Clientas nuevas</span>
-          <strong id="newCustomers">0</strong>
-          <small>Últimos 7 días</small>
+          <strong id="newCustomers">—</strong>
+          <small>Últimos 7 días · requiere clave</small>
         </article>
       </section>
 
@@ -111,10 +115,10 @@
           <ul class="inventory-list" id="inventoryList"></ul>
         </section>
 
-        <section class="panel panel-wide" id="comentarios">
+        <section class="panel panel-wide" id="acceso">
           <div class="panel-head">
-            <h2>Comentarios</h2>
-            <span id="commentSummary"></span>
+            <h2>Área protegida</h2>
+            <span>Clientas y comentarios</span>
           </div>
           <form class="admin-login" id="adminLogin">
             <label class="form-field">
@@ -123,10 +127,37 @@
             </label>
             <button class="btn btn-primary" type="submit">Entrar</button>
           </form>
-          <div class="hidden" id="moderation">
-            <ul class="moderation-list" id="moderationList"></ul>
-            <button class="text-button" id="adminLogout" type="button">Cerrar sesión de moderación</button>
+          <div class="admin-session hidden" id="adminSession">
+            <span>Sesión de administración activa en esta pestaña.</span>
+            <button class="text-button" id="adminLogout" type="button">Cerrar sesión</button>
           </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="clientas">
+          <div class="panel-head">
+            <h2>Clientas registradas</h2>
+            <span id="userSummary"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Registro</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="comentarios">
+          <div class="panel-head">
+            <h2>Comentarios</h2>
+            <span id="commentSummary"></span>
+          </div>
+          <ul class="moderation-list" id="moderationList"></ul>
         </section>
 
         <section class="panel panel-wide" id="ajustes">
@@ -157,6 +188,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="dashboard.js?v=2"></script>
+  <script src="dashboard.js?v=3"></script>
 </body>
 </html>

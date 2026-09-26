@@ -1,18 +1,5 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { sql, ensureSchema } from '../_db.js';
-
-function digest(value) {
-  return createHash('sha256').update(value).digest();
-}
-
-// Compara el token recibido con ADMIN_TOKEN (variable de entorno en Vercel).
-function isAuthorized(req) {
-  const expected = process.env.ADMIN_TOKEN;
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  if (!expected || !token) return false;
-  return timingSafeEqual(digest(token), digest(expected));
-}
+import { requireAdmin } from '../_admin.js';
 
 function parseId(value) {
   const id = Number(value);
@@ -20,12 +7,7 @@ function parseId(value) {
 }
 
 export default async function handler(req, res) {
-  if (!process.env.ADMIN_TOKEN) {
-    return res.status(503).json({ error: 'Falta configurar ADMIN_TOKEN en Vercel.' });
-  }
-  if (!isAuthorized(req)) {
-    return res.status(401).json({ error: 'Clave de administración incorrecta.' });
-  }
+  if (!requireAdmin(req, res)) return;
 
   try {
     await ensureSchema();

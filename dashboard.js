@@ -56,7 +56,6 @@ function renderDashboard() {
   document.getElementById('pendingOrders').textContent = dashboardOrders.filter((order) => order.status !== 'Enviado').length;
   document.getElementById('stockCount').textContent = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
   document.getElementById('lowStockCount').textContent = `${lowStock} con stock bajo`;
-  document.getElementById('newCustomers').textContent = '24';
 
   document.getElementById('ordersTable').innerHTML = dashboardOrders
     .map(
@@ -96,6 +95,7 @@ function renderDashboard() {
 function setupControls() {
   document.getElementById('refreshButton').addEventListener('click', () => {
     renderDashboard();
+    if (getToken()) loadProtectedData();
     showToast('Datos actualizados.');
   });
 
@@ -122,7 +122,8 @@ function setupControls() {
 
 const TOKEN_KEY = 'sameaAdminToken';
 const adminLogin = document.getElementById('adminLogin');
-const moderation = document.getElementById('moderation');
+const adminSession = document.getElementById('adminSession');
+const protectedPanels = [document.getElementById('clientas'), document.getElementById('comentarios')];
 const moderationList = document.getElementById('moderationList');
 const commentSummary = document.getElementById('commentSummary');
 
@@ -143,8 +144,8 @@ function setToken(token) {
   }
 }
 
-async function adminRequest(method, body) {
-  const response = await fetch('/api/admin/comments', {
+async function adminRequest(method, body, path = '/api/admin/comments') {
+  const response = await fetch(path, {
     method,
     headers: {
       Authorization: `Bearer ${getToken()}`,
@@ -163,8 +164,53 @@ async function adminRequest(method, body) {
 
 function showModeration(loggedIn) {
   adminLogin.classList.toggle('hidden', loggedIn);
-  moderation.classList.toggle('hidden', !loggedIn);
-  if (!loggedIn) commentSummary.textContent = '';
+  adminSession.classList.toggle('hidden', !loggedIn);
+  protectedPanels.forEach((panel) => panel.classList.toggle('hidden', !loggedIn));
+  if (!loggedIn) {
+    commentSummary.textContent = '';
+    moderationList.innerHTML = '';
+    document.getElementById('userSummary').textContent = '';
+    document.getElementById('usersTable').innerHTML = '';
+  }
+}
+
+async function loadUsers() {
+  const { users } = await adminRequest('GET', null, '/api/admin/users');
+  document.getElementById('userSummary').textContent = `${users.length} ${users.length === 1 ? 'clienta' : 'clientas'}`;
+  document.getElementById('newCustomers').textContent = users.filter(
+    (user) => Date.now() - new Date(user.created_at).getTime() < 7 * 24 * 60 * 60 * 1000
+  ).length;
+
+  const tbody = document.getElementById('usersTable');
+  tbody.innerHTML = '';
+  if (users.length === 0) {
+    const row = tbody.insertRow();
+    const cell = row.insertCell();
+    cell.colSpan = 3;
+    cell.className = 'comment-empty';
+    cell.textContent = 'Todavía no hay clientas registradas.';
+    return;
+  }
+  users.forEach((user) => {
+    const row = tbody.insertRow();
+    row.insertCell().textContent = user.name;
+    const emailCell = row.insertCell();
+    const link = document.createElement('a');
+    link.href = `mailto:${user.email}`;
+    link.textContent = user.email;
+    emailCell.append(link);
+    row.insertCell().textContent = new Date(user.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+  });
+}
+
+async function loadProtectedData() {
+  await loadModeration();
+  if (!getToken()) return;
+  try {
+    await loadUsers();
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function buildModerationItem(entry) {
@@ -235,7 +281,7 @@ adminLogin.addEventListener('submit', (event) => {
   event.preventDefault();
   setToken(document.getElementById('adminToken').value.trim());
   adminLogin.reset();
-  loadModeration();
+  loadProtectedData();
 });
 
 document.getElementById('adminLogout').addEventListener('click', () => {
@@ -265,4 +311,4 @@ moderationList.addEventListener('click', async (event) => {
 
 renderDashboard();
 setupControls();
-if (getToken()) loadModeration();
+if (getToken()) loadProtectedData();
