@@ -61,3 +61,24 @@ export async function destroySession(req, res) {
   if (token) await sql`DELETE FROM sessions WHERE token_hash = ${hashToken(token)}`;
   res.setHeader('Set-Cookie', sessionCookie('', 0));
 }
+
+const RESET_MINUTES = 60;
+
+// Crea un enlace de recuperación de un solo uso; en la base solo queda su hash.
+export async function createPasswordReset(userId) {
+  const token = randomBytes(32).toString('base64url');
+  await sql`DELETE FROM password_resets WHERE user_id = ${userId} OR expires_at < now()`;
+  await sql`
+    INSERT INTO password_resets (token_hash, user_id, expires_at)
+    VALUES (${hashToken(token)}, ${userId}, now() + make_interval(mins => ${RESET_MINUTES}))`;
+  return token;
+}
+
+// Consume el token: devuelve el user_id si era válido y lo borra.
+export async function consumePasswordReset(token) {
+  const rows = await sql`
+    DELETE FROM password_resets
+    WHERE token_hash = ${hashToken(token)}
+    RETURNING user_id, expires_at > now() AS valid`;
+  return rows[0] && rows[0].valid ? rows[0].user_id : null;
+}

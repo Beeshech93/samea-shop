@@ -315,16 +315,25 @@ function formatExpiryInput(event) {
 
 // ---------- Cuenta ----------
 
-function openAuthModal(defaultTab = 'login') {
+const forgotForm = $('forgotForm');
+const resetForm = $('resetForm');
+const authTabs = document.querySelector('.auth-tabs');
+const authViews = { login: loginForm, register: registerForm, forgot: forgotForm, reset: resetForm };
+let resetToken = null;
+
+function showAuthView(view) {
+  Object.entries(authViews).forEach(([name, form]) => form.classList.toggle('hidden', name !== view));
+  authTabs.classList.toggle('hidden', view === 'forgot' || view === 'reset');
+  loginTab.classList.toggle('active', view === 'login');
+  registerTab.classList.toggle('active', view === 'register');
+}
+
+function openAuthModal(view = 'login') {
   closeMenu();
   authModal.classList.add('open');
   authModal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('no-scroll');
-  if (defaultTab === 'register') {
-    switchToRegister();
-  } else {
-    switchToLogin();
-  }
+  showAuthView(view);
 }
 
 function closeAuthModal() {
@@ -334,17 +343,11 @@ function closeAuthModal() {
 }
 
 function switchToLogin() {
-  loginForm.classList.remove('hidden');
-  registerForm.classList.add('hidden');
-  loginTab.classList.add('active');
-  registerTab.classList.remove('active');
+  showAuthView('login');
 }
 
 function switchToRegister() {
-  registerForm.classList.remove('hidden');
-  loginForm.classList.add('hidden');
-  registerTab.classList.add('active');
-  loginTab.classList.remove('active');
+  showAuthView('register');
 }
 
 // Las cuentas viven en el servidor (Neon). Borra los datos que la versión
@@ -434,7 +437,56 @@ function handleRegister(event) {
     showToast('Las contraseñas no coinciden.');
     return;
   }
-  submitAuth(registerForm, '/api/auth/register', { name, email, password }, (user) => `Cuenta creada. Bienvenida, ${user.name}.`);
+  if (!$('registerPrivacy').checked) {
+    showToast('Debes aceptar el aviso de privacidad.');
+    return;
+  }
+  submitAuth(registerForm, '/api/auth/register', { name, email, password, privacyAccepted: true }, (user) => `Cuenta creada. Bienvenida, ${user.name}.`);
+}
+
+async function handleForgot(event) {
+  event.preventDefault();
+  const email = $('forgotEmail').value.trim().toLowerCase();
+  if (!email) return;
+  const button = forgotForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const { message } = await authRequest('/api/auth/forgot', { email });
+    forgotForm.reset();
+    showAuthView('login');
+    showToast(message);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function handleReset(event) {
+  event.preventDefault();
+  const password = $('resetPassword').value;
+  if (password.length < 8) {
+    showToast('La contraseña debe tener al menos 8 caracteres.');
+    return;
+  }
+  if (password !== $('resetPasswordConfirm').value) {
+    showToast('Las contraseñas no coinciden.');
+    return;
+  }
+  submitAuth(resetForm, '/api/auth/reset', { token: resetToken, password }, (user) => `Contraseña actualizada. Bienvenida, ${user.name}.`);
+}
+
+// Enlace del correo de recuperación: /?reset=<token>. Se quita de la URL
+// para que no quede en el historial.
+function checkResetLink() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('reset');
+  if (!token) return;
+  resetToken = token;
+  params.delete('reset');
+  const query = params.toString();
+  history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+  openAuthModal('reset');
 }
 
 // ---------- Menú móvil ----------
@@ -519,6 +571,12 @@ loginTab.addEventListener('click', switchToLogin);
 registerTab.addEventListener('click', switchToRegister);
 loginForm.addEventListener('submit', handleLogin);
 registerForm.addEventListener('submit', handleRegister);
+forgotForm.addEventListener('submit', handleForgot);
+resetForm.addEventListener('submit', handleReset);
+authModal.addEventListener('click', (event) => {
+  const link = event.target.closest('[data-auth-view]');
+  if (link) showAuthView(link.dataset.authView);
+});
 
 $('newsletterForm').addEventListener('submit', (event) => {
   event.preventDefault();
@@ -620,6 +678,7 @@ $('year').textContent = new Date().getFullYear();
 
 updateAuthState();
 loadCurrentUser();
+checkResetLink();
 renderCategories();
 renderProducts();
 renderCart();

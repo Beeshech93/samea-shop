@@ -1958,3 +1958,84 @@ h3 {
 .orders-table a {
   color: var(--gold);
 }
+
+/* ---------- Recuperación y consentimiento ---------- */
+
+.auth-title {
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.auth-help {
+  margin: -0.3rem 0 0.2rem;
+  font-size: 0.86rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-switch {
+  justify-self: center;
+}
+
+.check-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.check-field input {
+  margin-top: 0.2rem;
+  accent-color: var(--ink);
+}
+
+.check-field a,
+.fine-print a,
+.legal a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Página legal ---------- */
+
+.legal {
+  max-width: 760px;
+  padding: 4rem 0 5rem;
+}
+
+.legal h1 {
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+}
+
+.legal .updated {
+  margin: 0.6rem 0 2.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.legal h2 {
+  margin: 2.4rem 0 0.8rem;
+  font-size: 1.6rem;
+}
+
+.legal p,
+.legal li {
+  color: var(--ink-soft);
+}
+
+.legal ul {
+  padding-left: 1.2rem;
+}
+
+.legal li + li {
+  margin-top: 0.4rem;
+}
+
+.legal .placeholder {
+  background: var(--blush);
+  padding: 0 0.3rem;
+  border-radius: 3px;
+}

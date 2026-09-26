@@ -186,7 +186,7 @@ async function loadUsers() {
   if (users.length === 0) {
     const row = tbody.insertRow();
     const cell = row.insertCell();
-    cell.colSpan = 3;
+    cell.colSpan = 4;
     cell.className = 'comment-empty';
     cell.textContent = 'Todavía no hay clientas registradas.';
     return;
@@ -200,6 +200,14 @@ async function loadUsers() {
     link.textContent = user.email;
     emailCell.append(link);
     row.insertCell().textContent = new Date(user.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+    const actionCell = row.insertCell();
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'text-button';
+    remove.textContent = 'Eliminar';
+    remove.dataset.deleteUser = user.id;
+    remove.dataset.email = user.email;
+    actionCell.append(remove);
   });
 }
 
@@ -304,6 +312,20 @@ moderationList.addEventListener('click', async (event) => {
       return;
     }
     loadModeration();
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+// Cancelación de datos (derechos ARCO): elimina la cuenta y sus sesiones.
+document.getElementById('usersTable').addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-delete-user]');
+  if (!button) return;
+  if (!confirm(`¿Eliminar definitivamente la cuenta ${button.dataset.email}? No se puede deshacer.`)) return;
+  try {
+    await adminRequest('DELETE', { id: Number(button.dataset.deleteUser) }, '/api/admin/users');
+    showToast('Cuenta eliminada.');
+    await loadUsers();
   } catch (error) {
     showToast(error.message);
   }

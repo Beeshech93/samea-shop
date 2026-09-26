@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
   <div class="announcement">
@@ -161,7 +161,7 @@
               <textarea id="commentInput" rows="4" maxlength="500" placeholder="Cuéntanos qué te pareció SAMÉA" required></textarea>
             </label>
             <button class="btn btn-primary" type="submit">Enviar comentario</button>
-            <p class="fine-print">Los comentarios se publican tras ser revisados.</p>
+            <p class="fine-print">Los comentarios se publican tras ser revisados. Al enviar aceptas el <a href="privacidad.html">aviso de privacidad</a>.</p>
           </form>
         </div>
         <ul class="comment-list" id="commentList" aria-live="polite"></ul>
@@ -198,6 +198,7 @@
       <div>
         <h3>Ayuda</h3>
         <a href="mailto:hola@samea.com.mx">hola@samea.com.mx</a>
+        <a href="privacidad.html">Aviso de privacidad</a>
         <span>Envíos a todo México</span>
         <span>Cambios en 30 días</span>
       </div>
@@ -209,7 +210,7 @@
     </div>
     <div class="container footer-bottom">
       <span>© <span id="year"></span> SAMÉA · samea.shop</span>
-      <span>Tienda demostrativa: los pagos no se procesan.</span>
+      <span><a href="privacidad.html">Aviso de privacidad</a> · Tienda demostrativa: los pagos no se procesan.</span>
     </div>
   </footer>
 
@@ -279,6 +280,29 @@
           <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required />
         </label>
         <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+        <button class="text-button auth-switch" type="button" data-auth-view="forgot">¿Olvidaste tu contraseña?</button>
+      </form>
+      <form class="auth-form hidden" id="forgotForm">
+        <h2 class="auth-title">Recuperar contraseña</h2>
+        <p class="auth-help">Escribe tu correo y te enviaremos un enlace para elegir una nueva contraseña.</p>
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" id="forgotEmail" autocomplete="email" placeholder="correo@ejemplo.com" required />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Enviar enlace</button>
+        <button class="text-button auth-switch" type="button" data-auth-view="login">Volver a iniciar sesión</button>
+      </form>
+      <form class="auth-form hidden" id="resetForm">
+        <h2 class="auth-title">Nueva contraseña</h2>
+        <label class="form-field">
+          <span>Nueva contraseña</span>
+          <input type="password" id="resetPassword" autocomplete="new-password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+        </label>
+        <label class="form-field">
+          <span>Confirmar contraseña</span>
+          <input type="password" id="resetPasswordConfirm" autocomplete="new-password" placeholder="••••••••" required />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Guardar contraseña</button>
       </form>
       <form class="auth-form hidden" id="registerForm">
         <label class="form-field">
@@ -297,6 +321,10 @@
           <span>Confirmar contraseña</span>
           <input type="password" id="registerPasswordConfirm" autocomplete="new-password" placeholder="••••••••" required />
         </label>
+        <label class="check-field">
+          <input type="checkbox" id="registerPrivacy" required />
+          <span>He leído y acepto el <a href="privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>.</span>
+        </label>
         <button class="btn btn-primary btn-block" type="submit">Crear cuenta</button>
       </form>
     </div>
@@ -304,6 +332,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

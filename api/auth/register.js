@@ -1,5 +1,6 @@
 import { sql, ensureUsersSchema } from '../_db.js';
 import { createSession, hashPassword } from '../_auth.js';
+import { clientIp, isLimited, recordAttempt, tooMany } from '../_ratelimit.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,13 +24,22 @@ export default async function handler(req, res) {
   if (password.length < 8 || password.length > 200) {
     return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres.' });
   }
+  if (body.privacyAccepted !== true) {
+    return res.status(400).json({ error: 'Debes aceptar el aviso de privacidad.' });
+  }
 
   try {
     await ensureUsersSchema();
+
+    const ipKey = `register:ip:${clientIp(req)}`;
+    if (await isLimited([{ key: ipKey, limit: 10, minutes: 60 }])) {
+      return tooMany(res, 60);
+    }
+    await recordAttempt(ipKey);
     const passwordHash = await hashPassword(password);
     const rows = await sql`
-      INSERT INTO users (name, email, password_hash)
-      VALUES (${name}, ${email}, ${passwordHash})
+      INSERT INTO users (name, email, password_hash, privacy_accepted_at)
+      VALUES (${name}, ${email}, ${passwordHash}, now())
       RETURNING id, name, email`;
     await createSession(res, rows[0].id);
     return res.status(201).json({ user: { name: rows[0].name, email: rows[0].email } });
