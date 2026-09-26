@@ -3,196 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SAMÉA</title>
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <title>SAMÉA — Lencería fina</title>
+  <meta name="description" content="SAMÉA, piel de seda. Lencería fina para mujer: sujetadores, panties y conjuntos con envío a todo México." />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=5" />
 </head>
 <body>
-  <div class="topbar">10% EXTRA EN LA APP. CÓDIGO: APP10 | ENVÍO GRATIS A PARTIR DE $899 MXN</div>
+  <div class="announcement">
+    <p>Envío gratis desde $899 MXN · 10% extra en la app con el código <strong>APP10</strong></p>
+  </div>
+
   <header class="site-header">
     <div class="container header-inner">
-      <div>
-        <a href="#home" class="brand">
-          <img id="siteLogo" class="site-logo" src="assets/logo.png" alt="SAMÉA — Piel de seda — Lencería fina" title="SAMÉA — Piel de seda" />
-        </a>
-        <p class="domain-label">Dominio: <strong>samea.shop</strong></p>
-      </div>
-      <nav class="main-nav">
-        <a href="#coleccion">Colección</a>
-        <a href="#destacados">Total Looks</a>
-        <a href="#contacto">Contacto</a>
-      </nav>
-      <div class="auth-actions" id="authActions">
-        <span class="auth-status hidden" id="authStatus">Hola, <strong id="authUserName"></strong></span>
-        <button class="btn btn-secondary hidden" id="logoutButton" type="button">Cerrar sesión</button>
-        <button class="btn btn-secondary" id="loginButton" type="button">Iniciar sesión</button>
-        <button class="btn btn-primary" id="registerButton" type="button">Registrarse</button>
-      </div>
-      <button class="cart-button" id="cartButton" type="button" aria-label="Abrir carrito" onclick="document.getElementById('cartModal').classList.add('open'); document.getElementById('cartModal').setAttribute('aria-hidden', 'false');">
-        🛍️ <span id="cartCount">0</span>
+      <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18" /></svg>
       </button>
+
+      <nav class="main-nav" id="mainNav" aria-label="Principal">
+        <a href="#coleccion">Colección</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#looks">Total Looks</a>
+        <a href="#marca">Nosotras</a>
+      </nav>
+
+      <a href="#inicio" class="wordmark" aria-label="SAMÉA, inicio">
+        <span class="wordmark-name">SAMÉA</span>
+        <span class="wordmark-tag">Lencería fina</span>
+      </a>
+
+      <div class="header-actions">
+        <span class="auth-status hidden" id="authStatus">Hola, <strong id="authUserName"></strong></span>
+        <button class="text-button hidden" id="logoutButton" type="button">Salir</button>
+        <button class="icon-button" id="loginButton" type="button" aria-label="Iniciar sesión">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
+        </button>
+        <button class="icon-button cart-button" id="cartButton" type="button" aria-label="Abrir carrito">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
     </div>
   </header>
 
   <main>
-    <section class="hero" id="home">
-      <div class="container hero-content">
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
         <div class="hero-copy">
-          <div class="hero-sale">REBAJAS HASTA -70% | EN TIENDAS, WEB Y APP</div>
-          <h1>Tu nueva colección de lingerie femenia</h1>
-          <p>Descubre diseños suaves, sexy y cómodos pensados para celebrar tu cuerpo con confianza.</p>
+          <p class="eyebrow">Nueva colección · Piel de seda</p>
+          <h1>Lencería que se siente como <em>una segunda piel</em></h1>
+          <p class="hero-lead">Encajes delicados, satén suave y cortes pensados para celebrar tu cuerpo con confianza, cada día.</p>
           <div class="hero-actions">
-            <a href="#coleccion" class="btn btn-primary">Ver colección</a>
-            <a href="#destacados" class="btn btn-secondary">Ofertas exclusivas</a>
+            <a href="#coleccion" class="btn btn-primary">Comprar colección</a>
+            <a href="#looks" class="btn btn-ghost">Ver ofertas</a>
           </div>
-          <div class="hero-categories">
-            <a href="#coleccion" class="pill">Bras</a>
-            <a href="#coleccion" class="pill">Panties</a>
-            <a href="#coleccion" class="pill">Dormir</a>
-            <a href="#coleccion" class="pill">Accesorios</a>
+          <dl class="hero-stats">
+            <div><dt>Hasta -70%</dt><dd>en rebajas de temporada</dd></div>
+            <div><dt>48 h</dt><dd>envío en todo México</dd></div>
+          </dl>
+        </div>
+        <figure class="hero-media">
+          <img src="https://img.staticdj.com/ad1df50080f1b5238edbed255e7751c9_750x.jpeg" alt="Modelo con conjunto de lencería SAMÉA" />
+          <figcaption>Colección Otoño · Encaje y satén</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="trust-strip" aria-label="Ventajas">
+      <div class="container trust-grid">
+        <div><strong>Envío discreto</strong><span>Empaque sin marca exterior</span></div>
+        <div><strong>Pago seguro</strong><span>Tarjeta de crédito y débito</span></div>
+        <div><strong>Cambios fáciles</strong><span>30 días para cambiar tu talla</span></div>
+        <div><strong>Atención personal</strong><span>Asesoría de tallas por correo</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="categorias">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Explora</p>
+          <h2>Compra por categoría</h2>
+        </div>
+        <div class="category-grid" id="categoryGrid"></div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="coleccion">
+      <div class="container">
+        <div class="section-head section-head-split">
+          <div>
+            <p class="eyebrow">Lo más deseado</p>
+            <h2>Colección destacada</h2>
+          </div>
+          <div class="filter-tabs" id="filterTabs" role="tablist" aria-label="Filtrar productos">
+            <button class="filter-tab active" type="button" data-filter="todo">Todo</button>
+            <button class="filter-tab" type="button" data-filter="sujetadores">Sujetadores</button>
+            <button class="filter-tab" type="button" data-filter="panties">Panties</button>
+            <button class="filter-tab" type="button" data-filter="conjuntos">Conjuntos</button>
           </div>
         </div>
-        <div class="hero-image"></div>
+        <div class="product-grid" id="productGrid"></div>
       </div>
     </section>
 
-    <section class="features">
-      <div class="container features-grid">
-        <article>
-          <h2>Materiales suaves</h2>
-          <p>Tejidos ligeros y respirables para máxima comodidad todo el día.</p>
-        </article>
-        <article>
-          <h2>Estilos femeninos</h2>
-          <p>Modelos clásicos, sensuales y modernos para todos los gustos.</p>
-        </article>
-        <article>
-          <h2>Envío rápido</h2>
-          <p>Compra hoy y recibe tu paquete con total seguridad y rapidez.</p>
-        </article>
+    <section class="looks" id="looks">
+      <div class="container looks-grid">
+        <div class="looks-media">
+          <img src="https://resources.sears.com.mx/products/cdn/product-channel/71222/2026/5/11/72c909836679bf15b5faf9040bcaf0e1.jpg?scale=500&qlty=75" alt="Conjunto de satén color vainilla" />
+        </div>
+        <div class="looks-copy">
+          <p class="eyebrow">Total Looks</p>
+          <h2>-15% extra en conjuntos completos</h2>
+          <p>Combina tops, panties y accesorios y crea looks que se ven tan bien como se sienten. El descuento se aplica al pagar.</p>
+          <a href="#coleccion" class="btn btn-light" data-filter-link="conjuntos">Descubrir conjuntos</a>
+        </div>
       </div>
     </section>
 
-    <section class="product-section" id="coleccion">
-      <div class="container section-header">
-        <p class="eyebrow">Ropa interior de mujer</p>
-        <h2>Ropa interior de mujer destacada</h2>
+    <section class="section" id="marca">
+      <div class="container story-grid">
+        <img class="story-logo" src="assets/logo.png" alt="Logotipo SAMÉA — piel de seda, lencería fina" />
+        <div class="story-copy">
+          <p class="eyebrow">Nuestra historia</p>
+          <h2>Diseñada para sentirte segura, cómoda y bella</h2>
+          <p>SAMÉA nace de una idea sencilla: la lencería fina no tiene que sacrificar comodidad. Elegimos tejidos suaves y respirables, costuras planas y acabados cuidados para que cada pieza acompañe tu día, no lo interrumpa.</p>
+          <ul class="story-points">
+            <li>Tejidos suaves y respirables</li>
+            <li>Cortes femeninos para cada silueta</li>
+            <li>Detalles de encaje hechos para durar</li>
+          </ul>
+        </div>
       </div>
-      <div class="collection-tabs">
-        <button class="tab active">Sujetadores</button>
-        <button class="tab">Conjuntos</button>
-        <button class="tab">Básicos</button>
-        <button class="tab">Novedades</button>
-      </div>
-      <div class="product-grid" id="productGrid"></div>
     </section>
 
-    <section class="total-looks" id="destacados">
-      <div class="container total-looks-card">
+    <section class="newsletter">
+      <div class="container newsletter-inner">
         <div>
-          <p class="eyebrow">TOTAL LOOKS</p>
-          <h2>-15% EXTRA en conjuntos completos</h2>
-          <p>Crea tus looks de lingerie y duerme con estilo. Combina tops, bragas y accesorios con descuento extra.</p>
-          <div class="total-looks-actions">
-            <a href="#coleccion" class="pill">Ropa interior</a>
-            <a href="#coleccion" class="pill">Dormir</a>
-            <a href="#coleccion" class="pill">Beachwear</a>
-          </div>
+          <h2>Únete al círculo SAMÉA</h2>
+          <p>Recibe lanzamientos, ofertas privadas y un 10% en tu primera compra.</p>
         </div>
+        <form class="newsletter-form" id="newsletterForm">
+          <label class="sr-only" for="newsletterEmail">Correo electrónico</label>
+          <input type="email" id="newsletterEmail" placeholder="Tu correo electrónico" required />
+          <button class="btn btn-primary" type="submit">Suscribirme</button>
+        </form>
       </div>
     </section>
   </main>
 
   <footer class="site-footer" id="contacto">
-    <div class="container footer-inner">
-      <div>
-        <h3>SAMÉA</h3>
-        <p>Ropa interior de mujer para sentirte segura, cómoda y bella cada día.</p>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <span class="wordmark-name">SAMÉA</span>
+        <p>Lencería fina para mujer. Piel de seda, todos los días.</p>
       </div>
       <div>
-        <p>Soporte: hola@samea.com.mx</p>
-        <p>Envíos a todo México</p>
+        <h3>Tienda</h3>
+        <a href="#coleccion">Colección</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#looks">Total Looks</a>
       </div>
+      <div>
+        <h3>Ayuda</h3>
+        <a href="mailto:hola@samea.com.mx">hola@samea.com.mx</a>
+        <span>Envíos a todo México</span>
+        <span>Cambios en 30 días</span>
+      </div>
+      <div>
+        <h3>Cuenta</h3>
+        <button class="footer-link" type="button" data-open-auth="login">Iniciar sesión</button>
+        <button class="footer-link" type="button" data-open-auth="register">Crear cuenta</button>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="year"></span> SAMÉA · samea.shop</span>
+      <span>Tienda demostrativa: los pagos no se procesan.</span>
     </div>
   </footer>
 
-  <div class="auth-modal" id="authModal" aria-hidden="true" onclick="if (event.target === this) { closeAuthModal(); }">
-    <div class="auth-panel">
-      <button class="auth-close" id="closeAuthButton" type="button" aria-label="Cerrar" onclick="closeAuthModal()">×</button>
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="loginTab" type="button">Iniciar sesión</button>
-        <button class="auth-tab" id="registerTab" type="button">Registrarse</button>
-      </div>
-      <form class="auth-form" id="loginForm">
-        <h2>Iniciar sesión</h2>
-        <label class="form-field">
-          <span>Correo electrónico</span>
-          <input type="email" id="loginEmail" placeholder="correo@ejemplo.com" required />
-        </label>
-        <label class="form-field">
-          <span>Contraseña</span>
-          <input type="password" id="loginPassword" placeholder="********" required />
-        </label>
-        <button class="btn btn-primary" id="submitLogin" type="button">Entrar</button>
-      </form>
-      <form class="auth-form hidden" id="registerForm">
-        <h2>Registrarse</h2>
-        <label class="form-field">
-          <span>Nombre completo</span>
-          <input type="text" id="registerName" placeholder="Tu nombre" required />
-        </label>
-        <label class="form-field">
-          <span>Correo electrónico</span>
-          <input type="email" id="registerEmail" placeholder="correo@ejemplo.com" required />
-        </label>
-        <label class="form-field">
-          <span>Contraseña</span>
-          <input type="password" id="registerPassword" placeholder="********" required />
-        </label>
-        <label class="form-field">
-          <span>Confirmar contraseña</span>
-          <input type="password" id="registerPasswordConfirm" placeholder="********" required />
-        </label>
-        <button class="btn btn-primary" id="submitRegister" type="button">Crear cuenta</button>
-      </form>
-    </div>
-  </div>
+  <div class="overlay" id="overlay" hidden></div>
 
-  <div class="cart-modal" id="cartModal" aria-hidden="true" onclick="if (event.target === this) { this.classList.remove('open'); this.setAttribute('aria-hidden','true'); }">
-    <div class="cart-panel">
-      <button class="close-cart" id="closeCartButton" type="button" aria-label="Cerrar carrito" onclick="document.getElementById('cartModal').classList.remove('open'); document.getElementById('cartModal').setAttribute('aria-hidden','true');">×</button>
-      <h2>Tu carrito</h2>
+  <aside class="drawer" id="cartDrawer" aria-hidden="true" aria-labelledby="cartTitle">
+    <div class="drawer-head">
+      <h2 id="cartTitle">Tu carrito</h2>
+      <button class="icon-button" id="closeCartButton" type="button" aria-label="Cerrar carrito">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </div>
+    <div class="shipping-progress" id="shippingProgress">
+      <p id="shippingText"></p>
+      <div class="progress-track"><div class="progress-bar" id="shippingBar"></div></div>
+    </div>
+    <div class="drawer-body">
       <div id="cartItems" class="cart-items"></div>
-      <div class="payment-section">
+      <div class="payment-section" id="paymentSection">
         <h3>Pago con tarjeta</h3>
-        <p>Completa tus datos y paga con tarjeta de crédito o débito de forma segura.</p>
         <div class="card-form">
           <label class="form-field">
             <span>Número de tarjeta</span>
-            <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" />
+            <input type="text" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" />
           </label>
           <label class="form-field">
             <span>Nombre en la tarjeta</span>
-            <input type="text" id="cardName" placeholder="Nombre del titular" />
+            <input type="text" id="cardName" autocomplete="cc-name" placeholder="Nombre del titular" />
           </label>
           <div class="card-row">
-            <label class="form-field small-field">
+            <label class="form-field">
               <span>Vencimiento</span>
-              <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" />
+              <input type="text" id="cardExpiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" />
             </label>
-            <label class="form-field small-field">
+            <label class="form-field">
               <span>CVC</span>
-              <input type="text" id="cardCvc" placeholder="123" maxlength="4" />
+              <input type="text" id="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" />
             </label>
           </div>
         </div>
       </div>
-      <div class="cart-footer">
-        <p>Total: <strong id="cartTotal">0,00 MXN</strong></p>
-        <button class="btn btn-primary" id="checkoutButton">Pagar con tarjeta</button>
+    </div>
+    <div class="drawer-foot">
+      <div class="total-row"><span>Total</span><strong id="cartTotal">$0.00</strong></div>
+      <button class="btn btn-primary btn-block" id="checkoutButton" type="button">Pagar con tarjeta</button>
+      <p class="fine-print">Demo: ningún cargo se realiza.</p>
+    </div>
+  </aside>
+
+  <div class="modal" id="authModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Cuenta">
+    <div class="modal-panel">
+      <button class="icon-button modal-close" id="closeAuthButton" type="button" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <p class="wordmark-name modal-brand">SAMÉA</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" type="button">Iniciar sesión</button>
+        <button class="auth-tab" id="registerTab" type="button">Crear cuenta</button>
       </div>
+      <form class="auth-form" id="loginForm">
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" id="loginEmail" autocomplete="email" placeholder="correo@ejemplo.com" required />
+        </label>
+        <label class="form-field">
+          <span>Contraseña</span>
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+      </form>
+      <form class="auth-form hidden" id="registerForm">
+        <label class="form-field">
+          <span>Nombre completo</span>
+          <input type="text" id="registerName" autocomplete="name" placeholder="Tu nombre" required />
+        </label>
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" id="registerEmail" autocomplete="email" placeholder="correo@ejemplo.com" required />
+        </label>
+        <label class="form-field">
+          <span>Contraseña</span>
+          <input type="password" id="registerPassword" autocomplete="new-password" placeholder="••••••••" required />
+        </label>
+        <label class="form-field">
+          <span>Confirmar contraseña</span>
+          <input type="password" id="registerPasswordConfirm" autocomplete="new-password" placeholder="••••••••" required />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Crear cuenta</button>
+      </form>
     </div>
   </div>
 
-  <script src="script.js?v=3"></script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js?v=5"></script>
 </body>
 </html>

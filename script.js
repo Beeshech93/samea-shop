@@ -2,80 +2,93 @@ const products = [
   {
     id: 1,
     name: 'Tanga de encaje blanca',
-    description: 'Tanga de encaje blanco con detalle floral y corte minimalista; tejido elástico y acabado suave para máximo confort.',
+    category: 'panties',
+    badge: 'Más vendido',
+    description: 'Encaje floral y corte minimalista; tejido elástico y acabado suave para máximo confort.',
     price: 159.00,
     image: 'https://img-va.myshopline.com/image/store/1728356136669/dc07d0df-6418-4c1d-a46d-558d027409e7_1080x.jpg?w=1080&h=1620&q=80',
   },
   {
     id: 2,
     name: 'Body Seducción Negro',
-    description: 'Body negro con transparencias y encaje, tirantes finos y corte ceñido que realza la silueta.',
+    category: 'conjuntos',
+    badge: 'Nuevo',
+    description: 'Transparencias y encaje, tirantes finos y corte ceñido que realza la silueta.',
     price: 379.00,
     image: 'https://resources.sears.com.mx/products/cdn/product-channel/306368/2026/5/8/0129974d93f2abccc3fbeb69a1dba0d0.png?scale=500&qlty=75',
   },
   {
     id: 3,
     name: 'Braga Encaje Nude',
-    description: 'Braga nude de encaje de talle medio; corte cómodo y costuras planas para un ajuste invisible bajo la ropa.',
+    category: 'panties',
+    description: 'Talle medio y costuras planas para un ajuste invisible bajo la ropa.',
     price: 89.00,
     image: 'https://img.staticdj.com/edc6f84fb342cdd85ff8cd0df4027f06_750x.jpeg',
   },
   {
     id: 4,
     name: 'Sujetador Básico Blanco',
-    description: 'Sujetador blanco sin aros con copa suave y tirantes regulables; soporte cómodo para el uso diario.',
+    category: 'sujetadores',
+    description: 'Sin aros, copa suave y tirantes regulables; soporte cómodo para el día a día.',
     price: 249.00,
     image: 'https://seuke.com/cdn/shop/files/SYV008056_WR-2_1000x.jpg?v=1760872505',
   },
   {
     id: 5,
     name: 'Conjunto Satén Vainilla',
-    description: 'Conjunto de satén color vainilla compuesto por top y braga; tejido suave y brillo sutil para un look sofisticado.',
+    category: 'conjuntos',
+    badge: 'Total Look',
+    description: 'Top y braga de satén con brillo sutil para un look sofisticado.',
     price: 379.00,
     image: 'https://resources.sears.com.mx/products/cdn/product-channel/71222/2026/5/11/72c909836679bf15b5faf9040bcaf0e1.jpg?scale=500&qlty=75',
   },
   {
     id: 6,
     name: 'Top Bralette Lavanda',
-    description: 'Bralette lavanda acolchado sin aro con tirantes finos; diseño cómodo y femenino ideal para uso diario.',
+    category: 'sujetadores',
+    badge: 'Nuevo',
+    description: 'Bralette acolchado sin aro con tirantes finos; cómodo y femenino.',
     price: 249.00,
     image: 'https://img.staticdj.com/3337be03f93c0ec540882b0a5cf26fe1_750x.jpeg',
   },
 ];
 
-const logoMeta = {
-  name: 'SAMÉA — Piel de Seda',
-  description: 'Logotipo elegante en tonos rosa pálido y dorado que transmite sofisticación; representa una marca de lencería fina, femenina y con estilo.',
-};
+const categories = [
+  { id: 'sujetadores', name: 'Sujetadores', productId: 6 },
+  { id: 'panties', name: 'Panties', productId: 1 },
+  { id: 'conjuntos', name: 'Conjuntos', productId: 2 },
+];
+
+const FREE_SHIPPING_THRESHOLD = 899;
 
 const cart = [];
-const productGrid = document.getElementById('productGrid');
-const cartButton = document.getElementById('cartButton');
-const cartModal = document.getElementById('cartModal');
-const closeCartButton = document.getElementById('closeCartButton');
-const cartItemsContainer = document.getElementById('cartItems');
-const cartTotal = document.getElementById('cartTotal');
-const cartCount = document.getElementById('cartCount');
-const checkoutButton = document.getElementById('checkoutButton');
-const authModal = document.getElementById('authModal');
-const loginButton = document.getElementById('loginButton');
-const registerButton = document.getElementById('registerButton');
-const logoutButton = document.getElementById('logoutButton');
-const closeAuthButton = document.getElementById('closeAuthButton');
-const loginTab = document.getElementById('loginTab');
-const registerTab = document.getElementById('registerTab');
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-const authStatus = document.getElementById('authStatus');
-const authUserName = document.getElementById('authUserName');
-const loginEmail = document.getElementById('loginEmail');
-const loginPassword = document.getElementById('loginPassword');
-const registerName = document.getElementById('registerName');
-const registerEmail = document.getElementById('registerEmail');
-const registerPassword = document.getElementById('registerPassword');
-const registerPasswordConfirm = document.getElementById('registerPasswordConfirm');
-const submitLogin = document.getElementById('submitLogin');
-const submitRegister = document.getElementById('submitRegister');
+let activeFilter = 'todo';
+
+const $ = (id) => document.getElementById(id);
+
+const productGrid = $('productGrid');
+const categoryGrid = $('categoryGrid');
+const filterTabs = $('filterTabs');
+const cartDrawer = $('cartDrawer');
+const cartItemsContainer = $('cartItems');
+const cartTotal = $('cartTotal');
+const cartCount = $('cartCount');
+const paymentSection = $('paymentSection');
+const shippingText = $('shippingText');
+const shippingBar = $('shippingBar');
+const overlay = $('overlay');
+const authModal = $('authModal');
+const loginForm = $('loginForm');
+const registerForm = $('registerForm');
+const loginTab = $('loginTab');
+const registerTab = $('registerTab');
+const loginButton = $('loginButton');
+const logoutButton = $('logoutButton');
+const authStatus = $('authStatus');
+const authUserName = $('authUserName');
+const mainNav = $('mainNav');
+const menuToggle = $('menuToggle');
+const toast = $('toast');
 
 function formatCurrency(value) {
   return value.toLocaleString('es-MX', {
@@ -85,17 +98,52 @@ function formatCurrency(value) {
   });
 }
 
+let toastTimer;
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+// ---------- Catálogo ----------
+
+function renderCategories() {
+  categoryGrid.innerHTML = categories
+    .map((category) => {
+      const product = products.find((item) => item.id === category.productId);
+      const count = products.filter((item) => item.category === category.id).length;
+      return `
+        <a class="category-card" href="#coleccion" data-filter-link="${category.id}">
+          <img src="${product.image}" alt="${category.name}" loading="lazy" />
+          <span class="category-label">
+            <strong>${category.name}</strong>
+            <small>${count} ${count === 1 ? 'pieza' : 'piezas'}</small>
+          </span>
+        </a>
+      `;
+    })
+    .join('');
+}
+
 function renderProducts() {
-  productGrid.innerHTML = products
+  const visible = activeFilter === 'todo'
+    ? products
+    : products.filter((product) => product.category === activeFilter);
+
+  productGrid.innerHTML = visible
     .map(
       (product) => `
       <article class="product-card">
-        ${product.image ? `<img src="${product.image}" alt="${product.name}" />` : ''}
+        <div class="product-media">
+          <img src="${product.image}" alt="${product.name}" loading="lazy" />
+          ${product.badge ? `<span class="badge">${product.badge}</span>` : ''}
+          <button class="quick-add" type="button" data-add="${product.id}">Añadir al carrito</button>
+        </div>
         <div class="product-body">
           <h3>${product.name}</h3>
           <p>${product.description}</p>
-          <div class="price">${formatCurrency(product.price)}</div>
-          <button class="btn btn-primary" onclick="addToCart(${product.id})">Añadir al carrito</button>
+          <span class="price">${formatCurrency(product.price)}</span>
         </div>
       </article>
     `
@@ -103,16 +151,41 @@ function renderProducts() {
     .join('');
 }
 
-function updateCartCount() {
-  const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-  cartCount.textContent = totalQuantity;
+function setFilter(filter) {
+  activeFilter = filter;
+  filterTabs.querySelectorAll('.filter-tab').forEach((tab) => {
+    tab.classList.toggle('active', tab.dataset.filter === filter);
+  });
+  renderProducts();
+}
+
+// ---------- Carrito ----------
+
+function cartSubtotal() {
+  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+function renderShipping(total) {
+  const remaining = FREE_SHIPPING_THRESHOLD - total;
+  shippingText.innerHTML = remaining > 0
+    ? `Te faltan <strong>${formatCurrency(remaining)}</strong> para el envío gratis`
+    : '<strong>¡Tienes envío gratis!</strong>';
+  shippingBar.style.width = `${Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)}%`;
 }
 
 function renderCart() {
+  const total = cartSubtotal();
+  cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+  cartTotal.textContent = formatCurrency(total);
+  renderShipping(total);
+  paymentSection.classList.toggle('hidden', cart.length === 0);
+
   if (cart.length === 0) {
-    cartItemsContainer.innerHTML = '<p>Tu carrito está vacío. Añade algún artículo para continuar.</p>';
-    cartTotal.textContent = formatCurrency(0);
-    updateCartCount();
+    cartItemsContainer.innerHTML = `
+      <div class="cart-empty">
+        <p>Tu carrito está vacío.</p>
+        <a href="#coleccion" class="btn btn-ghost" data-close-cart>Ver colección</a>
+      </div>`;
     return;
   }
 
@@ -120,24 +193,23 @@ function renderCart() {
     .map(
       (item) => `
       <div class="cart-item">
-        ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
+        <img src="${item.image}" alt="${item.name}" />
         <div class="cart-item-details">
           <h4>${item.name}</h4>
-          <p>${formatCurrency(item.price)} x ${item.quantity}</p>
+          <span class="cart-item-price">${formatCurrency(item.price)}</span>
           <div class="cart-item-actions">
-            <button class="action-button" onclick="changeQuantity(${item.id}, -1)">-</button>
-            <button class="action-button" onclick="changeQuantity(${item.id}, 1)">+</button>
-            <button class="action-button" onclick="removeFromCart(${item.id})">Eliminar</button>
+            <div class="qty">
+              <button type="button" aria-label="Quitar uno" data-qty="${item.id}" data-change="-1">−</button>
+              <span>${item.quantity}</span>
+              <button type="button" aria-label="Añadir uno" data-qty="${item.id}" data-change="1">+</button>
+            </div>
+            <button class="text-button" type="button" data-remove="${item.id}">Eliminar</button>
           </div>
         </div>
       </div>
     `
     )
     .join('');
-
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  cartTotal.textContent = formatCurrency(total);
-  updateCartCount();
 }
 
 function addToCart(productId) {
@@ -155,7 +227,7 @@ function addToCart(productId) {
 }
 
 function changeQuantity(productId, change) {
-  const item = cart.find((item) => item.id === productId);
+  const item = cart.find((entry) => entry.id === productId);
   if (!item) return;
   item.quantity += change;
   if (item.quantity <= 0) {
@@ -173,62 +245,81 @@ function removeFromCart(productId) {
   }
 }
 
+function showOverlay() {
+  overlay.hidden = false;
+  document.body.classList.add('no-scroll');
+}
+
+function hideOverlay() {
+  overlay.hidden = true;
+  document.body.classList.remove('no-scroll');
+}
+
 function openCart() {
-  cartModal.classList.add('open');
-  cartModal.setAttribute('aria-hidden', 'false');
+  closeMenu();
+  cartDrawer.classList.add('open');
+  cartDrawer.setAttribute('aria-hidden', 'false');
+  showOverlay();
 }
 
 function closeCart() {
-  cartModal.classList.remove('open');
-  cartModal.setAttribute('aria-hidden', 'true');
+  cartDrawer.classList.remove('open');
+  cartDrawer.setAttribute('aria-hidden', 'true');
+  hideOverlay();
 }
 
-cartButton.addEventListener('click', openCart);
-closeCartButton.addEventListener('click', closeCart);
-checkoutButton.addEventListener('click', () => {
+function handleCheckout() {
   if (cart.length === 0) {
-    alert('Añade algún producto al carrito antes de finalizar la compra.');
+    showToast('Añade algún producto antes de pagar.');
     return;
   }
 
-  const cardNumber = document.getElementById('cardNumber').value.trim();
-  const cardName = document.getElementById('cardName').value.trim();
-  const cardExpiry = document.getElementById('cardExpiry').value.trim();
-  const cardCvc = document.getElementById('cardCvc').value.trim();
+  const cardNumber = $('cardNumber').value.trim();
+  const cardName = $('cardName').value.trim();
+  const cardExpiry = $('cardExpiry').value.trim();
+  const cardCvc = $('cardCvc').value.trim();
 
   if (!cardNumber || !cardName || !cardExpiry || !cardCvc) {
-    alert('Completa todos los datos de la tarjeta para continuar.');
+    showToast('Completa todos los datos de la tarjeta.');
     return;
   }
-
   if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(cardNumber)) {
-    alert('Ingresa un número de tarjeta válido con el formato 0000 0000 0000 0000.');
+    showToast('Número de tarjeta inválido (0000 0000 0000 0000).');
     return;
   }
-
   if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-    alert('Ingresa la fecha de expiración en formato MM/AA.');
+    showToast('Fecha de vencimiento en formato MM/AA.');
     return;
   }
-
   if (!/^\d{3,4}$/.test(cardCvc)) {
-    alert('Ingresa un CVC válido de 3 o 4 dígitos.');
+    showToast('CVC inválido: 3 o 4 dígitos.');
     return;
   }
 
-  alert('¡Pago aceptado! Gracias por tu compra. Esta tienda es una demo y el pago no se procesará realmente.');
   cart.length = 0;
   renderCart();
-  document.getElementById('cardNumber').value = '';
-  document.getElementById('cardName').value = '';
-  document.getElementById('cardExpiry').value = '';
-  document.getElementById('cardCvc').value = '';
+  ['cardNumber', 'cardName', 'cardExpiry', 'cardCvc'].forEach((id) => { $(id).value = ''; });
   closeCart();
-});
+  showToast('¡Gracias por tu compra! (Demo: el pago no se procesó.)');
+}
+
+function formatCardInput(event) {
+  const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
+  event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+function formatExpiryInput(event) {
+  const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+  event.target.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+}
+
+// ---------- Cuenta ----------
 
 function openAuthModal(defaultTab = 'login') {
+  closeMenu();
   authModal.classList.add('open');
   authModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('no-scroll');
   if (defaultTab === 'register') {
     switchToRegister();
   } else {
@@ -239,6 +330,7 @@ function openAuthModal(defaultTab = 'login') {
 function closeAuthModal() {
   authModal.classList.remove('open');
   authModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('no-scroll');
 }
 
 function switchToLogin() {
@@ -277,96 +369,159 @@ function clearCurrentUser() {
 
 function updateAuthState() {
   const currentUser = getCurrentUser();
-  if (currentUser) {
-    authStatus.classList.remove('hidden');
-    authUserName.textContent = currentUser.name;
-    loginButton.classList.add('hidden');
-    registerButton.classList.add('hidden');
-    logoutButton.classList.remove('hidden');
-  } else {
-    authStatus.classList.add('hidden');
-    authUserName.textContent = '';
-    logoutButton.classList.add('hidden');
-    loginButton.classList.remove('hidden');
-    registerButton.classList.remove('hidden');
-  }
+  authStatus.classList.toggle('hidden', !currentUser);
+  logoutButton.classList.toggle('hidden', !currentUser);
+  loginButton.classList.toggle('hidden', Boolean(currentUser));
+  authUserName.textContent = currentUser ? currentUser.name.split(' ')[0] : '';
 }
 
-function handleLogin() {
-  const email = loginEmail.value.trim().toLowerCase();
-  const password = loginPassword.value.trim();
+function handleLogin(event) {
+  event.preventDefault();
+  const email = $('loginEmail').value.trim().toLowerCase();
+  const password = $('loginPassword').value.trim();
   if (!email || !password) {
-    alert('Completa correo y contraseña para iniciar sesión.');
+    showToast('Completa correo y contraseña.');
     return;
   }
 
-  const users = getStoredUsers();
-  const user = users.find((item) => item.email === email && item.password === password);
+  const user = getStoredUsers().find((item) => item.email === email && item.password === password);
   if (!user) {
-    alert('Credenciales inválidas. Verifica tu correo y contraseña.');
+    showToast('Correo o contraseña incorrectos.');
     return;
   }
 
   setCurrentUser({ name: user.name, email: user.email });
   updateAuthState();
   closeAuthModal();
-  alert(`Bienvenida, ${user.name}! Has iniciado sesión.`);
+  loginForm.reset();
+  showToast(`Bienvenida, ${user.name}.`);
 }
 
-function handleRegister() {
-  const name = registerName.value.trim();
-  const email = registerEmail.value.trim().toLowerCase();
-  const password = registerPassword.value.trim();
-  const confirmPassword = registerPasswordConfirm.value.trim();
+function handleRegister(event) {
+  event.preventDefault();
+  const name = $('registerName').value.trim();
+  const email = $('registerEmail').value.trim().toLowerCase();
+  const password = $('registerPassword').value.trim();
+  const confirmPassword = $('registerPasswordConfirm').value.trim();
 
   if (!name || !email || !password || !confirmPassword) {
-    alert('Completa todos los campos para registrarte.');
+    showToast('Completa todos los campos.');
     return;
   }
-
   if (password !== confirmPassword) {
-    alert('Las contraseñas no coinciden.');
+    showToast('Las contraseñas no coinciden.');
     return;
   }
 
   const users = getStoredUsers();
   if (users.some((item) => item.email === email)) {
-    alert('Ya existe una cuenta con ese correo electrónico. Usa otro correo o inicia sesión.');
+    showToast('Ya existe una cuenta con ese correo.');
     return;
   }
 
-  const newUser = { name, email, password };
-  users.push(newUser);
+  users.push({ name, email, password });
   setStoredUsers(users);
   setCurrentUser({ name, email });
   updateAuthState();
   closeAuthModal();
-  alert(`Cuenta creada con éxito. Bienvenida, ${name}!`);
+  registerForm.reset();
+  showToast(`Cuenta creada. Bienvenida, ${name}.`);
 }
 
-window.addEventListener('click', (event) => {
-  if (event.target === cartModal) {
+// ---------- Menú móvil ----------
+
+function closeMenu() {
+  mainNav.classList.remove('open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+menuToggle.addEventListener('click', () => {
+  const open = mainNav.classList.toggle('open');
+  menuToggle.setAttribute('aria-expanded', String(open));
+});
+mainNav.addEventListener('click', (event) => {
+  if (event.target.closest('a')) closeMenu();
+});
+
+// ---------- Eventos ----------
+
+document.addEventListener('click', (event) => {
+  const addButton = event.target.closest('[data-add]');
+  if (addButton) {
+    addToCart(Number(addButton.dataset.add));
+    return;
+  }
+
+  const qtyButton = event.target.closest('[data-qty]');
+  if (qtyButton) {
+    changeQuantity(Number(qtyButton.dataset.qty), Number(qtyButton.dataset.change));
+    return;
+  }
+
+  const removeButton = event.target.closest('[data-remove]');
+  if (removeButton) {
+    removeFromCart(Number(removeButton.dataset.remove));
+    return;
+  }
+
+  const filterLink = event.target.closest('[data-filter-link]');
+  if (filterLink) {
+    setFilter(filterLink.dataset.filterLink);
+  }
+
+  if (event.target.closest('[data-close-cart]')) {
     closeCart();
   }
-  if (event.target === authModal) {
-    closeAuthModal();
+
+  const authLink = event.target.closest('[data-open-auth]');
+  if (authLink) {
+    openAuthModal(authLink.dataset.openAuth);
   }
 });
 
+filterTabs.addEventListener('click', (event) => {
+  const tab = event.target.closest('.filter-tab');
+  if (tab) setFilter(tab.dataset.filter);
+});
+
+$('cartButton').addEventListener('click', openCart);
+$('closeCartButton').addEventListener('click', closeCart);
+overlay.addEventListener('click', closeCart);
+$('checkoutButton').addEventListener('click', handleCheckout);
+$('cardNumber').addEventListener('input', formatCardInput);
+$('cardExpiry').addEventListener('input', formatExpiryInput);
+
 loginButton.addEventListener('click', () => openAuthModal('login'));
-registerButton.addEventListener('click', () => openAuthModal('register'));
 logoutButton.addEventListener('click', () => {
   clearCurrentUser();
   updateAuthState();
-  alert('Has cerrado sesión.');
+  showToast('Has cerrado sesión.');
 });
-closeAuthButton.addEventListener('click', closeAuthModal);
+$('closeAuthButton').addEventListener('click', closeAuthModal);
+authModal.addEventListener('click', (event) => {
+  if (event.target === authModal) closeAuthModal();
+});
 loginTab.addEventListener('click', switchToLogin);
 registerTab.addEventListener('click', switchToRegister);
-submitLogin.addEventListener('click', handleLogin);
-submitRegister.addEventListener('click', handleRegister);
+loginForm.addEventListener('submit', handleLogin);
+registerForm.addEventListener('submit', handleRegister);
+
+$('newsletterForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  event.target.reset();
+  showToast('¡Gracias! Te escribiremos pronto.');
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  closeCart();
+  closeAuthModal();
+  closeMenu();
+});
+
+$('year').textContent = new Date().getFullYear();
 
 updateAuthState();
-
+renderCategories();
 renderProducts();
 renderCart();
