@@ -4,7 +4,9 @@ const dashboardOrders = [
   { id: 'S1014', customer: 'Lucía Sánchez', status: 'Pendiente pago', total: 379.00 },
 ];
 
-const inventoryItems = [
+// Datos de ejemplo hasta que una administradora inicia sesión;
+// después se sustituyen por el stock real de la base.
+let inventoryItems = [
   { id: 1, name: 'Tanga de encaje blanca', stock: 12 },
   { id: 2, name: 'Body Seducción Negro', stock: 6 },
   { id: 3, name: 'Braga Encaje Nude', stock: 18 },
@@ -122,7 +124,7 @@ function setupControls() {
 
 const adminLogin = document.getElementById('adminLogin');
 const adminSession = document.getElementById('adminSession');
-const protectedPanels = [document.getElementById('clientas'), document.getElementById('comentarios')];
+const protectedPanels = [...document.querySelectorAll('[data-protected]')];
 const moderationList = document.getElementById('moderationList');
 const commentSummary = document.getElementById('commentSummary');
 let adminUser = null;
@@ -220,6 +222,7 @@ async function loadUsers() {
 async function loadProtectedData() {
   await loadModeration();
   if (!adminUser) return;
+  if (typeof loadCatalogAdmin === 'function') loadCatalogAdmin();
   try {
     await loadUsers();
   } catch (error) {

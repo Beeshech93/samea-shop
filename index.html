@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <div class="announcement">
@@ -97,12 +97,7 @@
             <p class="eyebrow">Lo más deseado</p>
             <h2>Colección destacada</h2>
           </div>
-          <div class="filter-tabs" id="filterTabs" role="tablist" aria-label="Filtrar productos">
-            <button class="filter-tab active" type="button" data-filter="todo">Todo</button>
-            <button class="filter-tab" type="button" data-filter="sujetadores">Sujetadores</button>
-            <button class="filter-tab" type="button" data-filter="panties">Panties</button>
-            <button class="filter-tab" type="button" data-filter="conjuntos">Conjuntos</button>
-          </div>
+          <div class="filter-tabs" id="filterTabs" role="tablist" aria-label="Filtrar productos"></div>
         </div>
         <div class="product-grid" id="productGrid"></div>
       </div>
@@ -116,7 +111,7 @@
         <div class="looks-copy">
           <p class="eyebrow">Total Looks</p>
           <h2>-15% extra en conjuntos completos</h2>
-          <p>Combina tops, panties y accesorios y crea looks que se ven tan bien como se sienten. El descuento se aplica al pagar.</p>
+          <p>Combina tops, panties y accesorios y crea looks que se ven tan bien como se sienten. Usa el código <strong>LOOKS15</strong> en el carrito.</p>
           <a href="#coleccion" class="btn btn-light" data-filter-link="conjuntos">Descubrir conjuntos</a>
         </div>
       </div>
@@ -254,6 +249,15 @@
       </div>
     </div>
     <div class="drawer-foot">
+      <form class="promo-form" id="promoForm">
+        <label class="sr-only" for="promoInput">Código promocional</label>
+        <input type="text" id="promoInput" placeholder="Código promocional" autocomplete="off" maxlength="30" />
+        <button class="btn btn-ghost" type="submit">Aplicar</button>
+      </form>
+      <p class="promo-status" id="promoStatus" aria-live="polite"></p>
+      <button class="text-button hidden" id="removePromo" type="button">Quitar código</button>
+      <div class="summary-row"><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
+      <div class="summary-row discount-row hidden" id="discountRow"><span id="discountLabel">Descuento</span><span id="cartDiscount">−$0.00</span></div>
       <div class="total-row"><span>Total</span><strong id="cartTotal">$0.00</strong></div>
       <button class="btn btn-primary btn-block" id="checkoutButton" type="button">Pagar con tarjeta</button>
       <p class="fine-print">Demo: ningún cargo se realiza.</p>
@@ -332,6 +336,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

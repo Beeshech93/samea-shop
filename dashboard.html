@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <div class="admin">
@@ -30,6 +30,14 @@
         <a href="#inventario">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
           Inventario
+        </a>
+        <a href="#productos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg>
+          Productos
+        </a>
+        <a href="#promociones">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5 5 19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></svg>
+          Promociones
         </a>
         <a href="#clientas">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2" /></svg>
@@ -110,7 +118,7 @@
         <section class="panel" id="inventario">
           <div class="panel-head">
             <h2>Inventario</h2>
-            <span>Bajo: ≤ 5 u.</span>
+            <span id="inventoryNote">Datos de ejemplo · bajo: ≤ 5 u.</span>
           </div>
           <ul class="inventory-list" id="inventoryList"></ul>
         </section>
@@ -137,7 +145,166 @@
           </div>
         </section>
 
-        <section class="panel panel-wide hidden" id="clientas">
+        <section class="panel panel-wide hidden" id="productos" data-protected>
+          <div class="panel-head">
+            <h2>Productos</h2>
+            <button class="btn btn-primary btn-small" id="newProductButton" type="button">Nuevo producto</button>
+          </div>
+
+          <form class="admin-form hidden" id="productForm" novalidate>
+            <h3 id="productFormTitle">Nuevo producto</h3>
+            <div class="form-grid">
+              <label class="form-field span-2">
+                <span>Nombre</span>
+                <input type="text" name="name" maxlength="120" required />
+              </label>
+              <label class="form-field">
+                <span>Categoría</span>
+                <select name="category" required>
+                  <option value="sujetadores">Sujetadores</option>
+                  <option value="panties">Panties</option>
+                  <option value="conjuntos">Conjuntos</option>
+                  <option value="dormir">Dormir</option>
+                  <option value="accesorios">Accesorios</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Etiqueta (opcional)</span>
+                <input type="text" name="badge" maxlength="30" placeholder="Nuevo, Más vendido…" />
+              </label>
+              <label class="form-field">
+                <span>Precio (MXN)</span>
+                <input type="number" name="price" min="1" step="0.01" required />
+              </label>
+              <label class="form-field">
+                <span>Descuento %</span>
+                <input type="number" name="discountPercent" min="0" max="90" step="1" value="0" />
+              </label>
+              <label class="form-field">
+                <span>Stock (unidades)</span>
+                <input type="number" name="stock" min="0" step="1" value="0" />
+              </label>
+              <label class="form-field">
+                <span>Tallas (separadas por comas)</span>
+                <input type="text" name="sizes" placeholder="S, M, L, XL" />
+              </label>
+              <label class="form-field span-2">
+                <span>URL de la imagen (https://…)</span>
+                <input type="url" name="imageUrl" placeholder="https://…" />
+              </label>
+              <label class="form-field span-2">
+                <span>Descripción</span>
+                <textarea name="description" rows="3" maxlength="600"></textarea>
+              </label>
+              <label class="check-field">
+                <input type="checkbox" name="active" checked />
+                <span>Visible en la tienda</span>
+              </label>
+              <p class="price-preview" id="pricePreview"></p>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Guardar producto</button>
+              <button class="text-button" type="button" data-cancel-form>Cancelar</button>
+            </div>
+          </form>
+
+          <div class="table-wrap">
+            <table class="orders-table catalog-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Tallas</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="productsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="promociones" data-protected>
+          <div class="panel-head">
+            <h2>Promociones</h2>
+            <button class="btn btn-primary btn-small" id="newPromoButton" type="button">Nueva promoción</button>
+          </div>
+
+          <form class="admin-form hidden" id="promoForm" novalidate>
+            <h3 id="promoFormTitle">Nueva promoción</h3>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Código</span>
+                <input type="text" name="code" maxlength="30" placeholder="VERANO20" required />
+              </label>
+              <label class="form-field">
+                <span>Tipo</span>
+                <select name="kind">
+                  <option value="percent">Porcentaje (%)</option>
+                  <option value="fixed">Monto fijo (MXN)</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Valor</span>
+                <input type="number" name="value" min="1" step="0.01" required />
+              </label>
+              <label class="form-field">
+                <span>Compra mínima (MXN)</span>
+                <input type="number" name="minSubtotal" min="0" step="0.01" value="0" />
+              </label>
+              <label class="form-field">
+                <span>Aplica a</span>
+                <select name="category">
+                  <option value="">Toda la tienda</option>
+                  <option value="sujetadores">Sujetadores</option>
+                  <option value="panties">Panties</option>
+                  <option value="conjuntos">Conjuntos</option>
+                  <option value="dormir">Dormir</option>
+                  <option value="accesorios">Accesorios</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Descripción</span>
+                <input type="text" name="description" maxlength="200" placeholder="-20% en toda la tienda" />
+              </label>
+              <label class="form-field">
+                <span>Empieza (opcional)</span>
+                <input type="datetime-local" name="startsAt" />
+              </label>
+              <label class="form-field">
+                <span>Termina (opcional)</span>
+                <input type="datetime-local" name="endsAt" />
+              </label>
+              <label class="check-field">
+                <input type="checkbox" name="active" checked />
+                <span>Activa</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Guardar promoción</button>
+              <button class="text-button" type="button" data-cancel-form>Cancelar</button>
+            </div>
+          </form>
+
+          <div class="table-wrap">
+            <table class="orders-table catalog-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Descuento</th>
+                  <th>Condiciones</th>
+                  <th>Vigencia</th>
+                  <th>Estado</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="promosTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="clientas" data-protected>
           <div class="panel-head">
             <h2>Clientas registradas</h2>
             <span id="userSummary"></span>
@@ -158,7 +325,7 @@
           </div>
         </section>
 
-        <section class="panel panel-wide hidden" id="comentarios">
+        <section class="panel panel-wide hidden" id="comentarios" data-protected>
           <div class="panel-head">
             <h2>Comentarios</h2>
             <span id="commentSummary"></span>
@@ -194,6 +361,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="dashboard.js?v=5"></script>
+  <script src="dashboard.js?v=6"></script>
+  <script src="dashboard-catalog.js?v=1"></script>
 </body>
 </html>
