@@ -1,6 +1,6 @@
 import { sql, ensureUsersSchema } from '../_db.js';
 import { createSession, hashPassword } from '../_auth.js';
-import { clientIp, isLimited, recordAttempt, tooMany } from '../_ratelimit.js';
+import { clearAttempts, clientIp, isLimited, recordAttempt, tooMany } from '../_ratelimit.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,6 +41,8 @@ export default async function handler(req, res) {
       INSERT INTO users (name, email, password_hash, privacy_accepted_at)
       VALUES (${name}, ${email}, ${passwordHash}, now())
       RETURNING id, name, email`;
+    // Los intentos fallidos previos a crear la cuenta no deben bloquearla.
+    await clearAttempts(`login:email:${email}`);
     await createSession(res, rows[0].id);
     return res.status(201).json({ user: { name: rows[0].name, email: rows[0].email } });
   } catch (error) {

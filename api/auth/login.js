@@ -1,6 +1,6 @@
 import { sql, ensureUsersSchema } from '../_db.js';
 import { createSession, hashPassword, verifyPassword } from '../_auth.js';
-import { clearAttempts, clientIp, isLimited, recordAttempt, tooMany } from '../_ratelimit.js';
+import { clearAttempts, clientIp, isLimited, recordAttempt } from '../_ratelimit.js';
 
 const WINDOW_MINUTES = 15;
 const MAX_PER_EMAIL = 5;
@@ -31,7 +31,10 @@ export default async function handler(req, res) {
       { key: emailKey, limit: MAX_PER_EMAIL, minutes: WINDOW_MINUTES },
       { key: ipKey, limit: MAX_PER_IP, minutes: WINDOW_MINUTES },
     ])) {
-      return tooMany(res, WINDOW_MINUTES);
+      res.setHeader('Retry-After', String(WINDOW_MINUTES * 60));
+      return res.status(429).json({
+        error: `Demasiados intentos fallidos. Espera ${WINDOW_MINUTES} minutos o usa "¿Olvidaste tu contraseña?".`,
+      });
     }
 
     const rows = await sql`SELECT id, name, email, password_hash FROM users WHERE email = ${email}`;
@@ -40,7 +43,9 @@ export default async function handler(req, res) {
     const valid = await verifyPassword(password, user ? user.password_hash : dummyHash);
     if (!user || !valid) {
       await recordAttempt(emailKey, ipKey);
-      return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });
+      return res.status(401).json({
+        error: 'Correo o contraseña incorrectos. Si te registraste antes de que la tienda guardara las cuentas en el servidor, crea tu cuenta de nuevo.',
+      });
     }
 
     await clearAttempts(emailKey);

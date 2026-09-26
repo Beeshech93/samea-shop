@@ -36,7 +36,7 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), Math.max(2800, message.length * 70));
 }
 
 function greeting() {
