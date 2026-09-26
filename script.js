@@ -532,6 +532,34 @@ function renderCommentMessage(message) {
   commentList.append(item);
 }
 
+const commentProduct = $('commentProduct');
+products.forEach((product) => {
+  commentProduct.append(new Option(product.name, product.id));
+});
+
+function buildComment(entry) {
+  const item = document.createElement('li');
+  item.className = 'comment';
+
+  const text = document.createElement('p');
+  text.textContent = entry.comment;
+
+  const meta = document.createElement('footer');
+  const author = document.createElement('strong');
+  author.textContent = entry.name || 'Clienta SAMÉA';
+  meta.append(author);
+
+  const product = products.find((p) => p.id === entry.product_id);
+  const details = [
+    product ? product.name : null,
+    new Date(entry.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' }),
+  ].filter(Boolean);
+  meta.append(` · ${details.join(' · ')}`);
+
+  item.append(text, meta);
+  return item;
+}
+
 async function loadComments() {
   try {
     const response = await fetch('/api/comments');
@@ -542,12 +570,7 @@ async function loadComments() {
       return;
     }
     commentList.innerHTML = '';
-    comments.forEach((text) => {
-      const item = document.createElement('li');
-      item.className = 'comment';
-      item.textContent = text;
-      commentList.append(item);
-    });
+    comments.forEach((entry) => commentList.append(buildComment(entry)));
   } catch {
     renderCommentMessage('Los comentarios no están disponibles en este momento.');
   }
@@ -555,9 +578,10 @@ async function loadComments() {
 
 commentForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const input = $('commentInput');
-  const comment = input.value.trim();
-  if (!comment) return;
+  const comment = $('commentInput').value.trim();
+  const name = $('commentName').value.trim();
+  const productId = commentProduct.value ? Number(commentProduct.value) : null;
+  if (!comment || !name) return;
 
   const button = commentForm.querySelector('button');
   button.disabled = true;
@@ -565,13 +589,12 @@ commentForm.addEventListener('submit', async (event) => {
     const response = await fetch('/api/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ comment }),
+      body: JSON.stringify({ name, productId, comment }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
     commentForm.reset();
-    showToast('¡Gracias por tu comentario!');
-    loadComments();
+    showToast('¡Gracias! Tu comentario se publicará tras revisarlo.');
   } catch (error) {
     showToast(error.message || 'No se pudo publicar el comentario.');
   } finally {

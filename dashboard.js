@@ -5,12 +5,12 @@ const dashboardOrders = [
 ];
 
 const inventoryItems = [
-  { name: 'Tanga de encaje blanca', stock: 12 },
-  { name: 'Body Seducción Negro', stock: 6 },
-  { name: 'Braga Encaje Nude', stock: 18 },
-  { name: 'Sujetador Básico Blanco', stock: 3 },
-  { name: 'Conjunto Satén Vainilla', stock: 7 },
-  { name: 'Top Bralette Lavanda', stock: 5 },
+  { id: 1, name: 'Tanga de encaje blanca', stock: 12 },
+  { id: 2, name: 'Body Seducción Negro', stock: 6 },
+  { id: 3, name: 'Braga Encaje Nude', stock: 18 },
+  { id: 4, name: 'Sujetador Básico Blanco', stock: 3 },
+  { id: 5, name: 'Conjunto Satén Vainilla', stock: 7 },
+  { id: 6, name: 'Top Bralette Lavanda', stock: 5 },
 ];
 
 const LOW_STOCK = 5;
@@ -118,5 +118,151 @@ function setupControls() {
   });
 }
 
+// ---------- Moderación de comentarios ----------
+
+const TOKEN_KEY = 'sameaAdminToken';
+const adminLogin = document.getElementById('adminLogin');
+const moderation = document.getElementById('moderation');
+const moderationList = document.getElementById('moderationList');
+const commentSummary = document.getElementById('commentSummary');
+
+function getToken() {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setToken(token) {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // sessionStorage no disponible: la clave se pedirá de nuevo.
+  }
+}
+
+async function adminRequest(method, body) {
+  const response = await fetch('/api/admin/comments', {
+    method,
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || 'Error del servidor.');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+function showModeration(loggedIn) {
+  adminLogin.classList.toggle('hidden', loggedIn);
+  moderation.classList.toggle('hidden', !loggedIn);
+  if (!loggedIn) commentSummary.textContent = '';
+}
+
+function buildModerationItem(entry) {
+  const item = document.createElement('li');
+  item.className = `moderation-item${entry.approved ? '' : ' is-pending'}`;
+
+  const head = document.createElement('div');
+  head.className = 'moderation-head';
+  const author = document.createElement('strong');
+  author.textContent = entry.name || 'Sin nombre';
+  const status = document.createElement('span');
+  status.className = `status ${entry.approved ? 'status-ok' : 'status-warn'}`;
+  status.textContent = entry.approved ? 'Publicado' : 'Pendiente';
+  head.append(author, status);
+
+  const product = inventoryItems.find((p) => p.id === entry.product_id);
+  const meta = document.createElement('small');
+  meta.textContent = [
+    product ? product.name : 'Opinión general',
+    new Date(entry.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }),
+  ].join(' · ');
+
+  const text = document.createElement('p');
+  text.textContent = entry.comment;
+
+  const actions = document.createElement('div');
+  actions.className = 'moderation-actions';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = entry.approved ? 'btn btn-ghost' : 'btn btn-primary';
+  toggle.textContent = entry.approved ? 'Ocultar' : 'Aprobar';
+  toggle.dataset.approve = String(!entry.approved);
+  toggle.dataset.id = entry.id;
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'text-button';
+  remove.textContent = 'Eliminar';
+  remove.dataset.delete = entry.id;
+  actions.append(toggle, remove);
+
+  item.append(head, meta, text, actions);
+  return item;
+}
+
+async function loadModeration() {
+  try {
+    const { comments } = await adminRequest('GET');
+    showModeration(true);
+    const pending = comments.filter((c) => !c.approved).length;
+    commentSummary.textContent = `${pending} pendientes · ${comments.length} en total`;
+    moderationList.innerHTML = '';
+    if (comments.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'comment-empty';
+      empty.textContent = 'Todavía no hay comentarios.';
+      moderationList.append(empty);
+      return;
+    }
+    comments.forEach((entry) => moderationList.append(buildModerationItem(entry)));
+  } catch (error) {
+    if (error.status === 401) setToken(null);
+    showModeration(false);
+    showToast(error.message);
+  }
+}
+
+adminLogin.addEventListener('submit', (event) => {
+  event.preventDefault();
+  setToken(document.getElementById('adminToken').value.trim());
+  adminLogin.reset();
+  loadModeration();
+});
+
+document.getElementById('adminLogout').addEventListener('click', () => {
+  setToken(null);
+  showModeration(false);
+});
+
+moderationList.addEventListener('click', async (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  try {
+    if (button.dataset.approve) {
+      await adminRequest('PATCH', { id: Number(button.dataset.id), approved: button.dataset.approve === 'true' });
+      showToast(button.dataset.approve === 'true' ? 'Comentario publicado.' : 'Comentario oculto.');
+    } else if (button.dataset.delete) {
+      if (!confirm('¿Eliminar este comentario definitivamente?')) return;
+      await adminRequest('DELETE', { id: Number(button.dataset.delete) });
+      showToast('Comentario eliminado.');
+    } else {
+      return;
+    }
+    loadModeration();
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
 renderDashboard();
 setupControls();
+if (getToken()) loadModeration();

@@ -144,11 +144,24 @@
           <p class="eyebrow">Opiniones</p>
           <h2>Lo que dicen nuestras clientas</h2>
           <form class="comment-form" id="commentForm">
+            <div class="comment-form-row">
+              <label class="form-field">
+                <span>Tu nombre</span>
+                <input type="text" id="commentName" maxlength="60" autocomplete="given-name" placeholder="Ana" required />
+              </label>
+              <label class="form-field">
+                <span>Producto</span>
+                <select id="commentProduct">
+                  <option value="">Opinión general</option>
+                </select>
+              </label>
+            </div>
             <label class="form-field">
               <span>Tu comentario</span>
               <textarea id="commentInput" rows="4" maxlength="500" placeholder="Cuéntanos qué te pareció SAMÉA" required></textarea>
             </label>
-            <button class="btn btn-primary" type="submit">Publicar comentario</button>
+            <button class="btn btn-primary" type="submit">Enviar comentario</button>
+            <p class="fine-print">Los comentarios se publican tras ser revisados.</p>
           </form>
         </div>
         <ul class="comment-list" id="commentList" aria-live="polite"></ul>

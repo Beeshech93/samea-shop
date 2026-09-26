@@ -31,6 +31,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
           Inventario
         </a>
+        <a href="#comentarios">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z" /></svg>
+          Comentarios
+        </a>
         <a href="#ajustes">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></svg>
           Ajustes
@@ -105,6 +109,24 @@
             <span>Bajo: ≤ 5 u.</span>
           </div>
           <ul class="inventory-list" id="inventoryList"></ul>
+        </section>
+
+        <section class="panel panel-wide" id="comentarios">
+          <div class="panel-head">
+            <h2>Comentarios</h2>
+            <span id="commentSummary"></span>
+          </div>
+          <form class="admin-login" id="adminLogin">
+            <label class="form-field">
+              <span>Clave de administración</span>
+              <input type="password" id="adminToken" autocomplete="current-password" placeholder="ADMIN_TOKEN" required />
+            </label>
+            <button class="btn btn-primary" type="submit">Entrar</button>
+          </form>
+          <div class="hidden" id="moderation">
+            <ul class="moderation-list" id="moderationList"></ul>
+            <button class="text-button" id="adminLogout" type="button">Cerrar sesión de moderación</button>
+          </div>
         </section>
 
         <section class="panel panel-wide" id="ajustes">

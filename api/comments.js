@@ -1,33 +1,37 @@
-import { neon } from '@neondatabase/serverless';
+import { sql, ensureSchema } from './_db.js';
 
-const sql = neon(process.env.DATABASE_URL);
-const MAX_LENGTH = 500;
-
-let tableReady;
-function ensureTable() {
-  tableReady ??= sql`CREATE TABLE IF NOT EXISTS comments (comment TEXT)`.catch((error) => {
-    tableReady = undefined;
-    throw error;
-  });
-  return tableReady;
-}
+const MAX_COMMENT = 500;
+const MAX_NAME = 60;
 
 export default async function handler(req, res) {
   try {
-    await ensureTable();
+    await ensureSchema();
 
     if (req.method === 'GET') {
-      const rows = await sql`SELECT comment FROM comments LIMIT 50`;
-      return res.status(200).json({ comments: rows.map((row) => row.comment) });
+      const rows = await sql`
+        SELECT id, name, product_id, comment, created_at
+        FROM comments
+        WHERE approved
+        ORDER BY created_at DESC
+        LIMIT 50`;
+      return res.status(200).json({ comments: rows });
     }
 
     if (req.method === 'POST') {
-      const comment = typeof req.body?.comment === 'string' ? req.body.comment.trim() : '';
-      if (!comment || comment.length > MAX_LENGTH) {
-        return res.status(400).json({ error: `El comentario debe tener entre 1 y ${MAX_LENGTH} caracteres.` });
+      const body = req.body || {};
+      const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
+      const name = typeof body.name === 'string' ? body.name.trim() : '';
+      const productId = Number.isInteger(body.productId) && body.productId > 0 ? body.productId : null;
+
+      if (!name || name.length > MAX_NAME) {
+        return res.status(400).json({ error: `El nombre debe tener entre 1 y ${MAX_NAME} caracteres.` });
       }
-      await sql`INSERT INTO comments (comment) VALUES (${comment})`;
-      return res.status(201).json({ ok: true });
+      if (!comment || comment.length > MAX_COMMENT) {
+        return res.status(400).json({ error: `El comentario debe tener entre 1 y ${MAX_COMMENT} caracteres.` });
+      }
+
+      await sql`INSERT INTO comments (name, product_id, comment) VALUES (${name}, ${productId}, ${comment})`;
+      return res.status(201).json({ ok: true, pending: true });
     }
 
     res.setHeader('Allow', 'GET, POST');
