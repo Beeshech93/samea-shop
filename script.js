@@ -583,8 +583,6 @@ function updateAuthState() {
   loginButton.classList.toggle('hidden', loggedIn);
   authUserName.textContent = loggedIn ? currentUser.name.split(' ')[0] : '';
 
-  document.querySelectorAll('[data-guest-only]').forEach((node) => node.classList.toggle('hidden', loggedIn));
-  document.querySelectorAll('[data-user-only]').forEach((node) => node.classList.toggle('hidden', !loggedIn));
   document.querySelectorAll('[data-admin-only]').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 }
 
@@ -742,11 +740,6 @@ document.addEventListener('click', (event) => {
   if (event.target.closest('[data-close-cart]')) {
     closeCart();
   }
-
-  const authLink = event.target.closest('[data-open-auth]');
-  if (authLink) {
-    openAuthModal(authLink.dataset.openAuth);
-  }
 });
 
 filterTabs.addEventListener('click', (event) => {
@@ -773,7 +766,6 @@ async function handleLogout() {
   }
 }
 logoutButton.addEventListener('click', handleLogout);
-document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', handleLogout));
 $('closeAuthButton').addEventListener('click', closeAuthModal);
 authModal.addEventListener('click', (event) => {
   if (event.target === authModal) closeAuthModal();

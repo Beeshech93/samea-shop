@@ -1,6 +1,6 @@
 # SAMÉA — Lencería fina
 
-Tienda en línea de lencería publicada en Vercel (https://samea-shop.vercel.app) con base de datos Postgres en Neon.
+Tienda en línea de lencería publicada en Vercel en **https://samea.shop** (también https://samea-shop.vercel.app) con base de datos Postgres en Neon.
 
 ## Estructura
 
