@@ -122,7 +122,7 @@ function showModeration(loggedIn) {
   if (loggedIn && adminUser) {
     setText('adminSessionText', `Sesión iniciada como ${adminUser.name} (${adminUser.email}).`);
     setText('greeting', `${greeting()}, ${adminUser.name.split(' ')[0]}`);
-    setText('topbarText', 'Productos, promociones, clientas y comentarios de samea.shop.');
+    setText('topbarText', 'Pedidos, envíos, productos, promociones, clientas y comentarios de samea.shop.');
   } else {
     setText('greeting', 'Panel de administración');
     setText('topbarText', 'Inicia sesión con tu cuenta de administradora para gestionar la tienda.');
@@ -257,6 +257,7 @@ async function loadProtectedData() {
   if (!adminUser) return;
   const tasks = [loadUsers(), loadSubscribers()];
   if (typeof loadCatalogAdmin === 'function') tasks.push(loadCatalogAdmin());
+  if (typeof loadOrdersAdmin === 'function') tasks.push(loadOrdersAdmin());
   const results = await Promise.allSettled(tasks);
   const failed = results.find((result) => result.status === 'rejected');
   if (failed) showToast(failed.reason.message);

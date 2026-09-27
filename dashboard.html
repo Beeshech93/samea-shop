@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body class="is-locked">
   <div class="admin">
@@ -22,6 +22,14 @@
         <a href="#resumen" class="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>
           Resumen
+        </a>
+        <a href="#pedidos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
+          Pedidos
+        </a>
+        <a href="#envios">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></svg>
+          Envíos
         </a>
         <a href="#inventario">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
@@ -69,6 +77,16 @@
 
       <section class="kpi-grid hidden" aria-label="Indicadores" data-protected>
         <article class="kpi">
+          <span>Pedidos por atender</span>
+          <strong id="kpiOpenOrders">—</strong>
+          <small id="kpiOpenOrdersNote">&nbsp;</small>
+        </article>
+        <article class="kpi">
+          <span>Ventas del mes</span>
+          <strong id="kpiSales">—</strong>
+          <small id="kpiSalesNote">&nbsp;</small>
+        </article>
+        <article class="kpi">
           <span>Productos visibles</span>
           <strong id="kpiProducts">—</strong>
           <small id="kpiProductsNote">&nbsp;</small>
@@ -111,6 +129,113 @@
             <span id="adminSessionText">Sesión de administración activa.</span>
             <button class="text-button" id="adminLogout" type="button">Cerrar sesión</button>
           </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="pedidos" data-protected>
+          <div class="panel-head">
+            <h2>Pedidos</h2>
+            <div class="panel-head-actions">
+              <span id="ordersSummary"></span>
+              <label class="sr-only" for="ordersFilter">Filtrar pedidos</label>
+              <select id="ordersFilter" class="compact-select">
+                <option value="open">Por atender</option>
+                <option value="all">Todos</option>
+                <option value="pending_payment">Pendientes de pago</option>
+                <option value="paid">Pagados</option>
+                <option value="preparing">En preparación</option>
+                <option value="shipped">Enviados</option>
+                <option value="delivered">Entregados</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="orders-table catalog-table">
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Clienta</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable"></tbody>
+            </table>
+          </div>
+          <div class="order-detail hidden" id="orderDetail"></div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="envios" data-protected>
+          <div class="panel-head">
+            <h2>Envíos</h2>
+            <button class="btn btn-primary btn-small" id="newZoneButton" type="button">Nueva zona</button>
+          </div>
+          <p class="coverage-note" id="coverageNote"></p>
+
+          <form class="admin-form hidden" id="zoneForm" novalidate>
+            <h3 id="zoneFormTitle">Nueva zona</h3>
+            <div class="form-grid">
+              <label class="form-field span-2">
+                <span>Nombre</span>
+                <input type="text" name="zoneName" maxlength="60" placeholder="Zona Centro" required />
+              </label>
+              <label class="form-field">
+                <span>Precio de envío (MXN)</span>
+                <input type="number" name="price" min="0" step="0.01" required />
+              </label>
+              <label class="form-field">
+                <span>Gratis desde (MXN, opcional)</span>
+                <input type="number" name="freeFrom" min="0" step="0.01" placeholder="899" />
+              </label>
+              <label class="form-field">
+                <span>Días mínimos</span>
+                <input type="number" name="daysMin" min="0" max="60" step="1" value="2" />
+              </label>
+              <label class="form-field">
+                <span>Días máximos</span>
+                <input type="number" name="daysMax" min="0" max="60" step="1" value="5" />
+              </label>
+              <label class="check-field">
+                <input type="checkbox" name="active" checked />
+                <span>Activa</span>
+              </label>
+            </div>
+            <fieldset class="states-picker">
+              <legend>Estados de esta zona</legend>
+              <div id="statesPicker"></div>
+            </fieldset>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Guardar zona</button>
+              <button class="text-button" type="button" data-cancel-form>Cancelar</button>
+            </div>
+          </form>
+
+          <div class="table-wrap">
+            <table class="orders-table catalog-table">
+              <thead>
+                <tr>
+                  <th>Zona</th>
+                  <th>Estados</th>
+                  <th>Precio</th>
+                  <th>Entrega</th>
+                  <th>Estado</th>
+                  <th><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="zonesTable"></tbody>
+            </table>
+          </div>
+
+          <form class="bank-form" id="bankForm">
+            <h3>Datos para pagos por transferencia</h3>
+            <p class="muted-line">Se muestran a la clienta al elegir transferencia. Si lo dejas vacío, la opción de transferencia no aparece en el checkout.</p>
+            <label class="form-field">
+              <span>Banco, titular, CLABE…</span>
+              <textarea name="bankDetails" rows="4" maxlength="1000" placeholder="Banco: …&#10;Titular: …&#10;CLABE: …"></textarea>
+            </label>
+            <button class="btn btn-primary btn-small" type="submit">Guardar datos bancarios</button>
+          </form>
         </section>
 
         <section class="panel panel-wide hidden" id="inventario" data-protected>
@@ -338,5 +463,6 @@
 
   <script src="dashboard.js?v=7"></script>
   <script src="dashboard-catalog.js?v=2"></script>
+  <script src="dashboard-orders.js?v=1"></script>
 </body>
 </html>

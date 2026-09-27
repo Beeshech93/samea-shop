@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finalizar compra · SAMÉA</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=12" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="text-button" href="index.html">← Seguir comprando</a>
+      <a href="index.html" class="wordmark" aria-label="SAMÉA, volver a la tienda">
+        <span class="wordmark-name">SAMÉA</span>
+        <span class="wordmark-tag">Pago seguro</span>
+      </a>
+      <span></span>
+    </div>
+  </header>
+
+  <main class="container checkout">
+    <h1>Finalizar compra</h1>
+
+    <div class="checkout-empty hidden" id="checkoutEmpty">
+      <p>Tu carrito está vacío.</p>
+      <a class="btn btn-primary" href="index.html#coleccion">Ver colección</a>
+    </div>
+
+    <form class="checkout-grid hidden" id="checkoutForm" novalidate>
+      <div class="checkout-main">
+        <section class="checkout-block">
+          <h2>1. Contacto</h2>
+          <div class="form-grid-2">
+            <label class="form-field span-all">
+              <span>Nombre completo</span>
+              <input type="text" name="name" autocomplete="name" maxlength="80" required />
+            </label>
+            <label class="form-field">
+              <span>Correo electrónico</span>
+              <input type="email" name="email" autocomplete="email" maxlength="254" required />
+            </label>
+            <label class="form-field">
+              <span>Teléfono</span>
+              <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="10 dígitos" maxlength="20" required />
+            </label>
+          </div>
+        </section>
+
+        <section class="checkout-block">
+          <h2>2. Dirección de envío</h2>
+          <div class="form-grid-2">
+            <label class="form-field span-all">
+              <span>Calle y número (exterior e interior)</span>
+              <input type="text" name="street" autocomplete="street-address" maxlength="120" required />
+            </label>
+            <label class="form-field">
+              <span>Colonia</span>
+              <input type="text" name="neighborhood" maxlength="80" required />
+            </label>
+            <label class="form-field">
+              <span>Código postal</span>
+              <input type="text" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="5" required />
+            </label>
+            <label class="form-field">
+              <span>Ciudad o municipio</span>
+              <input type="text" name="city" autocomplete="address-level2" maxlength="80" required />
+            </label>
+            <label class="form-field">
+              <span>Estado</span>
+              <select name="state" id="stateSelect" required>
+                <option value="">Elige tu estado</option>
+              </select>
+            </label>
+            <label class="form-field span-all">
+              <span>Referencias (opcional)</span>
+              <input type="text" name="addressNotes" maxlength="200" placeholder="Entre calles, color de la casa…" />
+            </label>
+          </div>
+          <p class="shipping-note" id="shippingNote">Elige tu estado para calcular el envío.</p>
+        </section>
+
+        <section class="checkout-block">
+          <h2>3. Pago</h2>
+          <div class="pay-options" id="payOptions">
+            <label class="pay-option" id="payCard">
+              <input type="radio" name="paymentMethod" value="card" />
+              <span>
+                <strong>Tarjeta de crédito o débito</strong>
+                <small>Pago seguro con Stripe. Tus datos de tarjeta no pasan por SAMÉA.</small>
+              </span>
+            </label>
+            <label class="pay-option" id="payTransfer">
+              <input type="radio" name="paymentMethod" value="transfer" />
+              <span>
+                <strong>Transferencia bancaria</strong>
+                <small>Te mostramos los datos al confirmar. Enviamos tu pedido cuando recibimos el pago.</small>
+              </span>
+            </label>
+          </div>
+          <p class="promo-status is-error hidden" id="payUnavailable">Los pagos no están disponibles en este momento. Escríbenos a hola@samea.com.mx.</p>
+        </section>
+      </div>
+
+      <aside class="checkout-summary">
+        <h2>Tu pedido</h2>
+        <ul class="summary-lines" id="summaryLines"></ul>
+        <div class="promo-form">
+          <label class="sr-only" for="checkoutPromo">Código promocional</label>
+          <input type="text" id="checkoutPromo" placeholder="Código promocional" maxlength="30" autocomplete="off" />
+          <button class="btn btn-ghost" type="button" id="applyPromo">Aplicar</button>
+        </div>
+        <p class="promo-status" id="checkoutPromoStatus" aria-live="polite"></p>
+        <div class="summary-row"><span>Subtotal</span><span id="sumSubtotal">—</span></div>
+        <div class="summary-row discount-row hidden" id="sumDiscountRow"><span id="sumDiscountLabel">Descuento</span><span id="sumDiscount"></span></div>
+        <div class="summary-row"><span>Envío</span><span id="sumShipping">—</span></div>
+        <div class="total-row"><span>Total</span><strong id="sumTotal">—</strong></div>
+        <button class="btn btn-primary btn-block" type="submit" id="placeOrder">Confirmar pedido</button>
+        <p class="fine-print">Al confirmar aceptas el <a href="privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>.</p>
+      </aside>
+    </form>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="checkout.js?v=2"></script>
+</body>
+</html>

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
   <div class="announcement">
@@ -36,6 +36,7 @@
 
       <div class="header-actions">
         <span class="auth-status hidden" id="authStatus">Hola, <strong id="authUserName"></strong></span>
+        <a class="text-button hidden" href="pedido.html" data-user-only>Mis pedidos</a>
         <a class="text-button hidden" href="dashboard.html" data-admin-only>Panel</a>
         <button class="text-button hidden" id="logoutButton" type="button">Salir</button>
         <button class="icon-button" id="loginButton" type="button" aria-label="Iniciar sesión">
@@ -196,13 +197,14 @@
         <h3>Ayuda</h3>
         <a href="mailto:hola@samea.com.mx">hola@samea.com.mx</a>
         <a href="privacidad.html">Aviso de privacidad</a>
+        <a href="pedido.html">Seguir mi pedido</a>
         <span>Envíos a todo México</span>
         <span>Cambios en 30 días</span>
       </div>
     </div>
     <div class="container footer-bottom">
       <span>© <span id="year"></span> SAMÉA · samea.shop</span>
-      <span><a href="privacidad.html">Aviso de privacidad</a> · Tienda demostrativa: los pagos no se procesan.</span>
+      <span><a href="pedido.html">Seguir mi pedido</a> · <a href="privacidad.html">Aviso de privacidad</a></span>
     </div>
   </footer>
 
@@ -221,29 +223,6 @@
     </div>
     <div class="drawer-body">
       <div id="cartItems" class="cart-items"></div>
-      <div class="payment-section" id="paymentSection">
-        <h3>Pago con tarjeta</h3>
-        <div class="card-form">
-          <label class="form-field">
-            <span>Número de tarjeta</span>
-            <input type="text" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" />
-          </label>
-          <label class="form-field">
-            <span>Nombre en la tarjeta</span>
-            <input type="text" id="cardName" autocomplete="cc-name" placeholder="Nombre del titular" />
-          </label>
-          <div class="card-row">
-            <label class="form-field">
-              <span>Vencimiento</span>
-              <input type="text" id="cardExpiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" />
-            </label>
-            <label class="form-field">
-              <span>CVC</span>
-              <input type="text" id="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" />
-            </label>
-          </div>
-        </div>
-      </div>
     </div>
     <div class="drawer-foot">
       <form class="promo-form" id="promoForm">
@@ -255,9 +234,9 @@
       <button class="text-button hidden" id="removePromo" type="button">Quitar código</button>
       <div class="summary-row"><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
       <div class="summary-row discount-row hidden" id="discountRow"><span id="discountLabel">Descuento</span><span id="cartDiscount">−$0.00</span></div>
-      <div class="total-row"><span>Total</span><strong id="cartTotal">$0.00</strong></div>
-      <button class="btn btn-primary btn-block" id="checkoutButton" type="button">Pagar con tarjeta</button>
-      <p class="fine-print">Demo: ningún cargo se realiza.</p>
+      <div class="total-row"><span>Total <small>(sin envío)</small></span><strong id="cartTotal">$0.00</strong></div>
+      <button class="btn btn-primary btn-block" id="checkoutButton" type="button">Finalizar compra</button>
+      <p class="fine-print">Pago con tarjeta (Stripe) o transferencia · el envío se calcula según tu estado.</p>
     </div>
   </aside>
 
@@ -333,6 +312,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

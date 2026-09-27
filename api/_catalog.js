@@ -231,7 +231,16 @@ export async function quoteCart(rawItems, rawCode, db = sql) {
       return { error: `Elige una talla válida para ${product.name}.` };
     }
     const unit = unitPrice(product);
-    lines.push({ productId: product.id, size, quantity, unitPrice: unit, lineTotal: round2(unit * quantity), category: product.category });
+    lines.push({
+      productId: product.id,
+      name: product.name,
+      image: product.image_url,
+      size,
+      quantity,
+      unitPrice: unit,
+      lineTotal: round2(unit * quantity),
+      category: product.category,
+    });
   }
 
   const subtotal = round2(lines.reduce((sum, line) => sum + line.lineTotal, 0));

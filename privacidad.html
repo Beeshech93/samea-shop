@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
   <header class="site-header">
@@ -28,7 +28,7 @@
   <main class="container legal">
     <p class="eyebrow">Legal</p>
     <h1>Aviso de privacidad integral</h1>
-    <p class="updated">Última actualización: 26 de septiembre de 2026</p>
+    <p class="updated">Última actualización: 27 de septiembre de 2026</p>
 
     <h2>1. Responsable de tus datos</h2>
     <p>
@@ -43,18 +43,20 @@
     <ul>
       <li><strong>Cuenta de clienta:</strong> nombre, correo electrónico y contraseña. La contraseña se guarda cifrada con un hash irreversible; nadie en SAMÉA puede leerla.</li>
       <li><strong>Comentarios:</strong> el nombre que escribas, el texto del comentario y, si lo eliges, el producto al que se refiere.</li>
+      <li><strong>Pedidos:</strong> nombre, correo, teléfono, dirección de envío, productos comprados, importes, método de pago y datos de la guía de envío.</li>
       <li><strong>Boletín:</strong> tu correo electrónico, si te suscribes.</li>
       <li><strong>Datos técnicos:</strong> una cookie de sesión para mantenerte conectada y tu dirección IP, que se usa solo para limitar intentos de acceso y envíos repetidos, y se borra en un máximo de 24 horas.</li>
     </ul>
     <p>
-      No tratamos datos personales sensibles. Los datos de tarjeta que se escriben en el carrito <strong>no se envían
-      ni se almacenan</strong>: la tienda es demostrativa y no procesa pagos.
+      No tratamos datos personales sensibles. Los pagos con tarjeta se hacen en la página segura de <strong>Stripe</strong>:
+      SAMÉA nunca ve ni guarda los datos de tu tarjeta.
     </p>
 
     <h2>3. Finalidades</h2>
     <p>Usamos tus datos para estas finalidades, necesarias para darte el servicio:</p>
     <ul>
       <li>Crear y administrar tu cuenta e iniciar sesión.</li>
+      <li>Procesar, cobrar, enviar y dar seguimiento a tus pedidos, y avisarte de su estado.</li>
       <li>Enviarte, cuando lo pidas, el enlace para recuperar tu contraseña.</li>
       <li>Publicar tus comentarios, una vez revisados.</li>
       <li>Enviarte el boletín con lanzamientos y ofertas, solo si te suscribiste. Puedes darte de baja en cualquier momento escribiendo a <a href="mailto:hola@samea.com.mx">hola@samea.com.mx</a>.</li>
@@ -67,7 +69,9 @@
     <ul>
       <li><strong>Vercel Inc.</strong> (Estados Unidos): alojamiento del sitio.</li>
       <li><strong>Neon</strong> (Estados Unidos): base de datos donde se guardan cuentas, comentarios y suscripciones al boletín.</li>
-      <li><strong>Resend</strong> (Estados Unidos): envío de correos de recuperación de contraseña.</li>
+      <li><strong>Stripe</strong> (Estados Unidos): procesamiento de pagos con tarjeta.</li>
+      <li><strong>Resend</strong> (Estados Unidos): envío de correos (recuperación de contraseña y avisos de pedido).</li>
+      <li><strong>Empresas de paquetería</strong> (por ejemplo Estafeta, DHL o FedEx): reciben tu nombre, teléfono y dirección solo para entregar tu pedido.</li>
     </ul>
     <p>Solo compartiremos datos con autoridades cuando una ley o una orden competente lo exija.</p>
 

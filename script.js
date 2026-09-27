@@ -94,7 +94,6 @@ const cartDrawer = $('cartDrawer');
 const cartItemsContainer = $('cartItems');
 const cartTotal = $('cartTotal');
 const cartCount = $('cartCount');
-const paymentSection = $('paymentSection');
 const shippingText = $('shippingText');
 const shippingBar = $('shippingBar');
 const overlay = $('overlay');
@@ -255,8 +254,10 @@ async function loadProducts() {
     products = fallbackCatalog();
   }
   catalogLoaded = true;
+  restoreCart();
   renderCatalog();
   renderCart();
+  refreshQuote();
 }
 
 // ---------- Carrito ----------
@@ -267,6 +268,48 @@ const promoStatus = $('promoStatus');
 
 function cartKey(id, size) {
   return `${id}|${size || ''}`;
+}
+
+// El carrito se guarda en este navegador para no perderlo al recargar y
+// para que checkout.html lo lea.
+const CART_STORAGE = 'samea_cart';
+
+function saveCart() {
+  try {
+    localStorage.setItem(CART_STORAGE, JSON.stringify({
+      items: cart.map((item) => ({ id: item.id, size: item.size, quantity: item.quantity })),
+      code: appliedCode,
+    }));
+  } catch {
+    // Almacenamiento no disponible: el carrito vive solo en esta página.
+  }
+}
+
+function restoreCart() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(CART_STORAGE) || 'null');
+  } catch {
+    saved = null;
+  }
+  if (!saved || !Array.isArray(saved.items)) return;
+  cart.length = 0;
+  saved.items.forEach((entry) => {
+    const product = products.find((item) => item.id === entry.id);
+    const quantity = Math.min(20, Math.max(1, Number(entry.quantity) || 1));
+    if (!product || !product.inStock) return;
+    if (product.sizes.length && !product.sizes.includes(entry.size)) return;
+    cart.push({
+      key: cartKey(product.id, entry.size),
+      id: product.id,
+      size: entry.size || null,
+      name: product.name,
+      image: product.image,
+      finalPrice: product.finalPrice,
+      quantity,
+    });
+  });
+  appliedCode = typeof saved.code === 'string' ? saved.code : '';
 }
 
 function localSubtotal() {
@@ -307,7 +350,6 @@ function renderTotals() {
 
 function renderCart() {
   cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
-  paymentSection.classList.toggle('hidden', cart.length === 0);
   promoForm.classList.toggle('hidden', cart.length === 0);
   renderTotals();
 
@@ -367,6 +409,7 @@ async function refreshQuote() {
     if (requestId !== quoteRequest) return;
     cartQuote = response.ok ? data : { error: data.error || 'No se pudo aplicar el código.' };
     if (!cartQuote.promotion) appliedCode = '';
+    saveCart();
   } catch {
     if (requestId !== quoteRequest) return;
     cartQuote = { error: 'No se pudo comprobar el código. Inténtalo de nuevo.' };
@@ -376,6 +419,7 @@ async function refreshQuote() {
 }
 
 function cartChanged() {
+  saveCart();
   renderCart();
   refreshQuote();
 }
@@ -442,6 +486,7 @@ promoForm.addEventListener('submit', (event) => {
 $('removePromo').addEventListener('click', () => {
   appliedCode = '';
   cartQuote = null;
+  saveCart();
   renderTotals();
 });
 
@@ -468,51 +513,13 @@ function closeCart() {
   hideOverlay();
 }
 
-function handleCheckout() {
+function goToCheckout() {
   if (cart.length === 0) {
-    showToast('Añade algún producto antes de pagar.');
+    showToast('Añade algún producto antes de finalizar la compra.');
     return;
   }
-
-  const cardNumber = $('cardNumber').value.trim();
-  const cardName = $('cardName').value.trim();
-  const cardExpiry = $('cardExpiry').value.trim();
-  const cardCvc = $('cardCvc').value.trim();
-
-  if (!cardNumber || !cardName || !cardExpiry || !cardCvc) {
-    showToast('Completa todos los datos de la tarjeta.');
-    return;
-  }
-  if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(cardNumber)) {
-    showToast('Número de tarjeta inválido (0000 0000 0000 0000).');
-    return;
-  }
-  if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-    showToast('Fecha de vencimiento en formato MM/AA.');
-    return;
-  }
-  if (!/^\d{3,4}$/.test(cardCvc)) {
-    showToast('CVC inválido: 3 o 4 dígitos.');
-    return;
-  }
-
-  cart.length = 0;
-  appliedCode = '';
-  cartQuote = null;
-  renderCart();
-  ['cardNumber', 'cardName', 'cardExpiry', 'cardCvc'].forEach((id) => { $(id).value = ''; });
-  closeCart();
-  showToast('¡Gracias por tu compra! (Demo: el pago no se procesó.)');
-}
-
-function formatCardInput(event) {
-  const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
-  event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-}
-
-function formatExpiryInput(event) {
-  const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
-  event.target.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  saveCart();
+  window.location.href = 'checkout.html';
 }
 
 // ---------- Cuenta ----------
@@ -583,6 +590,7 @@ function updateAuthState() {
   loginButton.classList.toggle('hidden', loggedIn);
   authUserName.textContent = loggedIn ? currentUser.name.split(' ')[0] : '';
 
+  document.querySelectorAll('[data-user-only]').forEach((node) => node.classList.toggle('hidden', !loggedIn));
   document.querySelectorAll('[data-admin-only]').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 }
 
@@ -750,9 +758,7 @@ filterTabs.addEventListener('click', (event) => {
 $('cartButton').addEventListener('click', openCart);
 $('closeCartButton').addEventListener('click', closeCart);
 overlay.addEventListener('click', closeCart);
-$('checkoutButton').addEventListener('click', handleCheckout);
-$('cardNumber').addEventListener('input', formatCardInput);
-$('cardExpiry').addEventListener('input', formatExpiryInput);
+$('checkoutButton').addEventListener('click', goToCheckout);
 
 loginButton.addEventListener('click', () => openAuthModal('login'));
 async function handleLogout() {

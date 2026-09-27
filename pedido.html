@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi pedido · SAMÉA</title>
+  <meta name="robots" content="noindex" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=12" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="text-button" href="index.html">← Volver a la tienda</a>
+      <a href="index.html" class="wordmark" aria-label="SAMÉA, volver a la tienda">
+        <span class="wordmark-name">SAMÉA</span>
+        <span class="wordmark-tag">Mis pedidos</span>
+      </a>
+      <span></span>
+    </div>
+  </header>
+
+  <main class="container order-page">
+    <section class="hidden" id="orderView">
+      <p class="eyebrow" id="orderDate"></p>
+      <h1>Pedido <span id="orderCode"></span></h1>
+      <p class="order-status-line"><span class="status" id="orderStatus"></span> <span id="orderStatusText"></span></p>
+
+      <ol class="order-steps" id="orderSteps"></ol>
+
+      <div class="notice notice-pay hidden" id="bankBox">
+        <h2>Datos para tu transferencia</h2>
+        <p>Transfiere <strong id="bankAmount"></strong> y usa <strong id="bankConcept"></strong> como concepto. Prepararemos tu pedido en cuanto recibamos el pago.</p>
+        <pre id="bankDetails"></pre>
+      </div>
+
+      <div class="notice hidden" id="cardPendingBox">
+        <p>Estamos confirmando tu pago con tarjeta… Si cerraste la ventana de pago sin terminar, este pedido se cancelará solo en una hora sin cargo.</p>
+      </div>
+
+      <div class="notice notice-ok hidden" id="trackingBox">
+        <h2>Tu pedido va en camino</h2>
+        <p>Paquetería: <strong id="trackCarrier"></strong><br />Número de guía: <strong id="trackNumber"></strong></p>
+        <a class="btn btn-primary hidden" id="trackLink" target="_blank" rel="noopener noreferrer">Rastrear envío</a>
+      </div>
+
+      <div class="order-grid">
+        <section class="panel">
+          <h2>Productos</h2>
+          <ul class="summary-lines" id="orderLines"></ul>
+          <div class="summary-row"><span>Subtotal</span><span id="oSubtotal"></span></div>
+          <div class="summary-row discount-row hidden" id="oDiscountRow"><span id="oDiscountLabel">Descuento</span><span id="oDiscount"></span></div>
+          <div class="summary-row"><span>Envío</span><span id="oShipping"></span></div>
+          <div class="total-row"><span>Total</span><strong id="oTotal"></strong></div>
+        </section>
+        <section class="panel">
+          <h2>Envío</h2>
+          <p class="address" id="oAddress"></p>
+          <p class="muted-line" id="oShippingInfo"></p>
+          <h2 class="history-title">Historial</h2>
+          <ul class="order-history" id="orderHistory"></ul>
+        </section>
+      </div>
+    </section>
+
+    <section class="hidden" id="myOrders">
+      <h1>Mis pedidos</h1>
+      <ul class="my-orders" id="myOrdersList"></ul>
+    </section>
+
+    <section class="lookup hidden" id="lookup">
+      <h1>Seguir mi pedido</h1>
+      <p>Escribe el número de pedido (por ejemplo SAM-1001) y el correo con el que compraste.</p>
+      <form class="lookup-form" id="lookupForm">
+        <label class="form-field">
+          <span>Número de pedido</span>
+          <input type="text" name="code" placeholder="SAM-1001" maxlength="12" required />
+        </label>
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
+        <button class="btn btn-primary" type="submit">Buscar pedido</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="pedido.js?v=2"></script>
+</body>
+</html>
