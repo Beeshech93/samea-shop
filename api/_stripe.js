@@ -39,34 +39,64 @@ async function stripe(method, path, data) {
 
 const cents = (amount) => Math.round(Number(amount) * 100);
 
-export async function createCheckoutSession({ order, lines, shippingCost, discount, successUrl, cancelUrl }) {
-  const lineItems = lines.map((line) => ({
-    quantity: line.quantity,
-    price_data: {
-      currency: 'mxn',
-      unit_amount: cents(line.unitPrice),
-      product_data: { name: line.size ? `${line.name} · Talla ${line.size}` : line.name },
-    },
-  }));
+// Parámetros de la página de pago de Stripe, personalizados para SAMÉA.
+export function buildCheckoutParams({ order, lines, shippingCost, successUrl, cancelUrl, options = {} }) {
+  const lineItems = lines.map((line) => {
+    const productData = {
+      name: line.name,
+      description: [line.size ? `Talla ${line.size}` : null, 'SAMÉA · Lencería fina'].filter(Boolean).join(' · '),
+    };
+    if (typeof line.image === 'string' && line.image.startsWith('https://')) productData.images = [line.image];
+    return {
+      quantity: line.quantity,
+      price_data: { currency: 'mxn', unit_amount: cents(line.unitPrice), product_data: productData },
+    };
+  });
   if (shippingCost > 0) {
     lineItems.push({
       quantity: 1,
-      price_data: { currency: 'mxn', unit_amount: cents(shippingCost), product_data: { name: `Envío (${order.shipping_zone})` } },
+      price_data: {
+        currency: 'mxn',
+        unit_amount: cents(shippingCost),
+        product_data: { name: `Envío · ${order.shipping_zone}`, description: `Entrega en ${order.shipping_days}` },
+      },
     });
+  }
+
+  const methods = ['card'];
+  const methodOptions = {};
+  if (options.oxxo) {
+    methods.push('oxxo');
+    methodOptions.oxxo = { expires_after_days: 3 };
+  }
+  if (options.installments) {
+    methodOptions.card = { installments: { enabled: true } };
   }
 
   const params = {
     mode: 'payment',
+    submit_type: 'pay',
+    locale: 'es-419',
     customer_email: order.email,
     client_reference_id: order.code,
     success_url: successUrl,
     cancel_url: cancelUrl,
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
-    locale: 'es',
     metadata: { order_id: String(order.id), order_code: order.code },
-    payment_intent_data: { metadata: { order_id: String(order.id), order_code: order.code } },
+    payment_intent_data: {
+      description: `Pedido ${order.code} · SAMÉA`,
+      metadata: { order_id: String(order.id), order_code: order.code },
+    },
+    payment_method_types: methods,
     line_items: lineItems,
   };
+  if (Object.keys(methodOptions).length) params.payment_method_options = methodOptions;
+  if (options.message) params.custom_text = { submit: { message: options.message.slice(0, 1200) } };
+  return params;
+}
+
+export async function createCheckoutSession({ order, lines, shippingCost, discount, successUrl, cancelUrl, options = {} }) {
+  const params = buildCheckoutParams({ order, lines, shippingCost, successUrl, cancelUrl, options });
 
   if (discount > 0) {
     const coupon = await stripe('POST', '/coupons', {
@@ -79,11 +109,25 @@ export async function createCheckoutSession({ order, lines, shippingCost, discou
     params.discounts = [{ coupon: coupon.id }];
   }
 
-  return stripe('POST', '/checkout/sessions', params);
+  try {
+    return await stripe('POST', '/checkout/sessions', params);
+  } catch (error) {
+    // Si la cuenta de Stripe aún no tiene OXXO o meses sin intereses
+    // activados, se cobra solo con tarjeta en lugar de fallar.
+    if (!options.oxxo && !options.installments) throw error;
+    console.error('stripe: reintento solo con tarjeta:', error.message);
+    params.payment_method_types = ['card'];
+    delete params.payment_method_options;
+    return stripe('POST', '/checkout/sessions', params);
+  }
 }
 
 export function retrieveCheckoutSession(id) {
   return stripe('GET', `/checkout/sessions/${encodeURIComponent(id)}`);
+}
+
+export function retrievePaymentIntent(id) {
+  return stripe('GET', `/payment_intents/${encodeURIComponent(id)}?expand%5B%5D=payment_method`);
 }
 
 export async function expireCheckoutSession(id) {

@@ -20,7 +20,7 @@ test('rutas desconocidas responden 404', async () => {
 });
 
 test('las rutas de administración rechazan cambios desde otro origen', async () => {
-  for (const resource of ['comments', 'users', 'products', 'promotions', 'subscribers']) {
+  for (const resource of ['comments', 'users', 'products', 'promotions', 'subscribers', 'orders', 'shipping', 'payments']) {
     const res = await call(admin, { method: 'PATCH', query: { resource }, headers: { host: 'samea.shop', origin: 'https://malo.com' } });
     assert.equal(res.statusCode, 403, resource);
   }

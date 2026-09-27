@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body class="is-locked">
   <div class="admin">
@@ -30,6 +30,10 @@
         <a href="#envios">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></svg>
           Envíos
+        </a>
+        <a href="#pagos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2" /><path d="M2.5 10h19M6 15h4" /></svg>
+          Pagos
         </a>
         <a href="#inventario">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></svg>
@@ -227,14 +231,40 @@
             </table>
           </div>
 
-          <form class="bank-form" id="bankForm">
-            <h3>Datos para pagos por transferencia</h3>
-            <p class="muted-line">Se muestran a la clienta al elegir transferencia. Si lo dejas vacío, la opción de transferencia no aparece en el checkout.</p>
-            <label class="form-field">
-              <span>Banco, titular, CLABE…</span>
-              <textarea name="bankDetails" rows="4" maxlength="1000" placeholder="Banco: …&#10;Titular: …&#10;CLABE: …"></textarea>
-            </label>
-            <button class="btn btn-primary btn-small" type="submit">Guardar datos bancarios</button>
+        </section>
+
+        <section class="panel panel-wide hidden" id="pagos" data-protected>
+          <div class="panel-head">
+            <h2>Pagos</h2>
+            <span id="stripeStatus"></span>
+          </div>
+          <form class="payments-form" id="paymentsForm">
+            <div class="payments-grid">
+              <div>
+                <h3>Stripe (tarjeta)</h3>
+                <label class="toggle-row">
+                  <input type="checkbox" name="installments" />
+                  <span><strong>Meses sin intereses</strong><small>Las clientas con tarjetas mexicanas que lo permitan podrán diferir su pago. Actívalo también en tu cuenta de Stripe.</small></span>
+                </label>
+                <label class="toggle-row">
+                  <input type="checkbox" name="oxxo" />
+                  <span><strong>Pago en efectivo en OXXO</strong><small>La clienta recibe una ficha y paga en tienda (tiene 3 días). El pedido se confirma solo al recibir el pago. Actívalo también en tu cuenta de Stripe.</small></span>
+                </label>
+                <label class="form-field">
+                  <span>Mensaje junto al botón de pago (opcional)</span>
+                  <textarea name="message" rows="2" maxlength="500" placeholder="Gracias por comprar en SAMÉA. Tu pedido se envía en empaque discreto."></textarea>
+                </label>
+              </div>
+              <div>
+                <h3>Transferencia bancaria</h3>
+                <p class="muted-line">Se muestran a la clienta al elegir transferencia. Si lo dejas vacío, esa opción no aparece en el checkout.</p>
+                <label class="form-field">
+                  <span>Banco, titular, CLABE…</span>
+                  <textarea name="bankDetails" rows="5" maxlength="1000" placeholder="Banco: …&#10;Titular: …&#10;CLABE: …"></textarea>
+                </label>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-small" type="submit">Guardar ajustes de pago</button>
           </form>
         </section>
 
@@ -463,6 +493,6 @@
 
   <script src="dashboard.js?v=7"></script>
   <script src="dashboard-catalog.js?v=2"></script>
-  <script src="dashboard-orders.js?v=1"></script>
+  <script src="dashboard-orders.js?v=2"></script>
 </body>
 </html>

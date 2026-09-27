@@ -90,6 +90,9 @@ export function ensureLogisticsSchema() {
         shipped_at TIMESTAMPTZ,
         delivered_at TIMESTAMPTZ
       )`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_method TEXT`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS oxxo_voucher_url TEXT`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS oxxo_expires_at TIMESTAMPTZ`;
     await sql`CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status, created_at DESC)`;
     await sql`CREATE INDEX IF NOT EXISTS orders_user_idx ON orders (user_id, created_at DESC)`;
     await sql`
@@ -295,6 +298,9 @@ export function publicOrder(order, events = []) {
     statusLabel: ORDER_STATUSES[order.status] || order.status,
     paymentMethod: order.payment_method,
     paymentStatus: order.payment_status,
+    stripeMethod: order.stripe_method,
+    oxxoVoucherUrl: order.status === 'pending_payment' ? order.oxxo_voucher_url : null,
+    oxxoExpiresAt: order.oxxo_expires_at,
     name: order.name,
     email: order.email,
     phone: order.phone,

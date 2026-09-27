@@ -6,8 +6,9 @@ import promotions from '../_lib/admin/promotions.js';
 import subscribers from '../_lib/admin/subscribers.js';
 import orders from '../_lib/admin/orders.js';
 import shipping from '../_lib/admin/shipping.js';
+import payments from '../_lib/admin/payments.js';
 
-const routes = { comments, users, products, promotions, subscribers, orders, shipping };
+const routes = { comments, users, products, promotions, subscribers, orders, shipping, payments };
 
 export default function handler(req, res) {
   const route = Object.hasOwn(routes, req.query.resource) ? routes[req.query.resource] : null;

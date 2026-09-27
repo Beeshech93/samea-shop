@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <header class="site-header">
@@ -36,6 +36,12 @@
         <h2>Datos para tu transferencia</h2>
         <p>Transfiere <strong id="bankAmount"></strong> y usa <strong id="bankConcept"></strong> como concepto. Prepararemos tu pedido en cuanto recibamos el pago.</p>
         <pre id="bankDetails"></pre>
+      </div>
+
+      <div class="notice notice-pay hidden" id="oxxoBox">
+        <h2>Paga tu ficha en OXXO</h2>
+        <p>Muestra la ficha en cualquier OXXO y paga <strong id="oxxoAmount"></strong><span id="oxxoExpires"></span>. Confirmaremos tu pedido automáticamente en cuanto se registre el pago.</p>
+        <a class="btn btn-primary" id="oxxoLink" target="_blank" rel="noopener noreferrer">Ver ficha OXXO</a>
       </div>
 
       <div class="notice hidden" id="cardPendingBox">
@@ -90,6 +96,6 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="pedido.js?v=2"></script>
+  <script src="pedido.js?v=3"></script>
 </body>
 </html>

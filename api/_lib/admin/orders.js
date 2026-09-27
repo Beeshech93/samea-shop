@@ -3,7 +3,8 @@ import { requireAdmin } from '../../_admin.js';
 import {
   CARRIERS, ORDER_STATUSES, addEvent, adminOrder, cancelOrder, ensureLogisticsSchema, markPaid, orderEvents,
 } from '../../_logistics.js';
-import { expireCheckoutSession, retrieveCheckoutSession, stripeConfigured } from '../../_stripe.js';
+import { expireCheckoutSession, stripeConfigured } from '../../_stripe.js';
+import { syncStripeOrder } from '../../_payments.js';
 import { sendOrderMail } from '../../_order-mail.js';
 
 const text = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
@@ -49,14 +50,12 @@ export default async function handler(req, res) {
         if (order.payment_method !== 'card' || !order.stripe_session_id || !stripeConfigured()) {
           return res.status(400).json({ error: 'Este pedido no tiene pago con tarjeta que verificar.' });
         }
-        const session = await retrieveCheckoutSession(order.stripe_session_id);
-        if (session.payment_status === 'paid') {
-          const paid = await markPaid(id, 'Pago con tarjeta confirmado');
-          if (paid) await sendOrderMail('paid', paid);
-        } else if (session.status === 'expired') {
-          await cancelOrder(id, 'El pago con tarjeta no se completó a tiempo');
-        } else {
-          return res.status(200).json({ ok: true, message: 'Stripe indica que el pago aún no se ha completado.' });
+        const synced = await syncStripeOrder(order);
+        if (synced.status === 'pending_payment') {
+          const message = synced.oxxo_voucher_url
+            ? 'La clienta generó una ficha OXXO y aún no la ha pagado.'
+            : 'Stripe indica que el pago aún no se ha completado.';
+          return res.status(200).json({ ok: true, message, order: adminOrder(synced) });
         }
         break;
       }
@@ -92,7 +91,9 @@ export default async function handler(req, res) {
         if (!['pending_payment', 'paid', 'preparing'].includes(order.status)) {
           return res.status(400).json({ error: 'Este pedido ya no se puede cancelar.' });
         }
-        if (order.stripe_session_id && order.status === 'pending_payment') await expireCheckoutSession(order.stripe_session_id);
+        if (order.stripe_session_id && order.status === 'pending_payment' && !order.oxxo_voucher_url) {
+          await expireCheckoutSession(order.stripe_session_id);
+        }
         await cancelOrder(id, note || 'Cancelado desde el panel');
         break;
       }

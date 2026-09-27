@@ -203,6 +203,11 @@ async function init() {
     const options = await api('/api/orders/options');
     options.states.forEach((state) => form.state.append(new Option(state, state)));
     $('payCard').classList.toggle('hidden', !options.payments.card);
+    const extras = [options.payments.installments && 'meses sin intereses', options.payments.oxxo && 'efectivo en OXXO'].filter(Boolean);
+    if (extras.length) {
+      $('payCardTitle').textContent = options.payments.oxxo ? 'Tarjeta u OXXO' : 'Tarjeta de crédito o débito';
+      $('payCardText').textContent = `Pago seguro con Stripe: tarjeta${extras.length ? `, ${extras.join(' o ')}` : ''}. Tus datos no pasan por SAMÉA.`;
+    }
     $('payTransfer').classList.toggle('hidden', !options.payments.transfer);
     const available = ['card', 'transfer'].filter((method) => options.payments[method]);
     if (available.length === 1) form.querySelector(`input[value="${available[0]}"]`).checked = true;

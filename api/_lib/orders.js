@@ -3,11 +3,12 @@ import { quoteCart } from '../_catalog.js';
 import { getSessionUser } from '../_auth.js';
 import { clientIp, isLimited, recordAttempt, tooMany } from '../_ratelimit.js';
 import {
-  MX_STATES, addEvent, cancelOrder, ensureLogisticsSchema, getSetting, hashToken, markPaid, newOrderToken,
+  MX_STATES, addEvent, cancelOrder, ensureLogisticsSchema, getSetting, hashToken, newOrderToken,
   orderEvents, publicOrder, publicZone, releaseStock, reserveStock, shippingCost, shippingDays, validateCustomer,
   zoneForState,
 } from '../_logistics.js';
-import { createCheckoutSession, expireCheckoutSession, retrieveCheckoutSession, stripeConfigured } from '../_stripe.js';
+import { createCheckoutSession, expireCheckoutSession } from '../_stripe.js';
+import { getPaymentSettings, syncStripeOrder } from '../_payments.js';
 import { sendOrderMail } from '../_order-mail.js';
 
 const round2 = (value) => Math.round(value * 100) / 100;
@@ -23,8 +24,12 @@ async function activeZones() {
 }
 
 async function paymentOptions() {
-  const bankDetails = await getSetting('bank_details');
-  return { card: stripeConfigured(), transfer: Boolean(bankDetails.trim()), bankDetails };
+  const settings = await getPaymentSettings();
+  return {
+    ...settings,
+    card: settings.stripeConfigured,
+    transfer: Boolean(settings.bankDetails.trim()),
+  };
 }
 
 // Totales del pedido: carrito (precios de la base) + envío según el estado.
@@ -42,27 +47,6 @@ async function priceOrder(items, code, state) {
     total: round2(afterDiscount + (shipping || 0)),
     shippingError: state && !zone ? `Por ahora no enviamos a ${state}.` : null,
   };
-}
-
-// Si el pedido con tarjeta sigue pendiente, pregunta a Stripe por el pago.
-async function syncCardPayment(order) {
-  if (order.payment_method !== 'card' || order.status !== 'pending_payment' || !order.stripe_session_id || !stripeConfigured()) {
-    return order;
-  }
-  try {
-    const session = await retrieveCheckoutSession(order.stripe_session_id);
-    if (session.payment_status === 'paid') {
-      const paid = await markPaid(order.id, 'Pago con tarjeta confirmado');
-      if (paid) await sendOrderMail('paid', paid);
-      return paid || order;
-    }
-    if (session.status === 'expired') {
-      return (await cancelOrder(order.id, 'El pago con tarjeta no se completó a tiempo')) || order;
-    }
-  } catch (error) {
-    console.error('stripe sync error', order.code, error.message);
-  }
-  return order;
 }
 
 // Acceso al pedido: con el token del enlace, o con la sesión de su dueña.
@@ -95,7 +79,12 @@ export async function options(req, res) {
   return res.status(200).json({
     states: MX_STATES,
     zones: zones.map(publicZone),
-    payments: { card: payments.card, transfer: payments.transfer },
+    payments: {
+      card: payments.card,
+      transfer: payments.transfer,
+      oxxo: payments.card && payments.oxxo,
+      installments: payments.card && payments.installments,
+    },
   });
 }
 
@@ -177,6 +166,7 @@ export async function create(req, res) {
         shippingCost: shipping,
         discount: q.discount,
         successUrl: `${origin}${orderUrl}&pago=ok`,
+        options: { oxxo: payments.oxxo, installments: payments.installments, message: payments.message },
         cancelUrl: `${origin}/checkout.html?cancelado=${encodeURIComponent(order.code)}&t=${encodeURIComponent(token)}`,
       });
       await sql`UPDATE orders SET stripe_session_id = ${session.id} WHERE id = ${order.id}`;
@@ -208,7 +198,7 @@ export async function track(req, res) {
   }
 
   if (!order) return res.status(404).json({ error: 'No encontramos ese pedido. Revisa el número y el correo.' });
-  order = await syncCardPayment(order);
+  order = await syncStripeOrder(order);
   return res.status(200).json({ order: await orderResponse(order) });
 }
 
@@ -216,8 +206,9 @@ export async function abandon(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido.' });
   const order = await findOrder(req, req.body?.c, req.body?.t);
   if (!order) return res.status(404).json({ error: 'Pedido no encontrado.' });
-  const synced = await syncCardPayment(order);
-  if (synced.payment_method === 'card' && synced.status === 'pending_payment') {
+  const synced = await syncStripeOrder(order);
+  // Una ficha OXXO ya generada no se cancela: la clienta aún puede pagarla.
+  if (synced.payment_method === 'card' && synced.status === 'pending_payment' && !synced.oxxo_voucher_url) {
     if (synced.stripe_session_id) await expireCheckoutSession(synced.stripe_session_id);
     await cancelOrder(synced.id, 'Pago con tarjeta cancelado por la clienta');
   }

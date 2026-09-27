@@ -30,6 +30,11 @@ function node(tag, props = {}, children = []) {
 
 const formatDateTime = (iso) => new Date(iso).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
 
+function paymentLabel(order) {
+  if (order.paymentMethod === 'transfer') return 'Transferencia';
+  return order.stripeMethod === 'oxxo' ? 'OXXO (Stripe)' : 'Tarjeta (Stripe)';
+}
+
 function daysSince(iso) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 }
@@ -83,7 +88,7 @@ function renderOrdersTable() {
     );
     row.insertCell().append(
       node('strong', { textContent: formatCurrency(order.total) }),
-      node('small', { className: 'muted-line', textContent: order.paymentMethod === 'card' ? 'Tarjeta' : 'Transferencia' })
+      node('small', { className: 'muted-line', textContent: paymentLabel(order) })
     );
     const statusCell = row.insertCell();
     statusCell.append(node('span', { className: `status ${ORDER_STATUS_CLASS[order.status] || ''}`, textContent: order.statusLabel }));
@@ -175,7 +180,10 @@ async function openOrder(id) {
   });
   const contact = node('p', { className: 'muted-line' });
   const mail = node('a', { href: `mailto:${order.email}`, textContent: order.email });
-  contact.append(mail, ` · ${order.shippingZone} (${order.shippingDays}) · ${order.paymentMethod === 'card' ? 'Tarjeta (Stripe)' : 'Transferencia'}`);
+  contact.append(mail, ` · ${order.shippingZone} (${order.shippingDays}) · ${paymentLabel(order)}`);
+  if (order.status === 'pending_payment' && order.stripeMethod === 'oxxo' && order.oxxoExpiresAt) {
+    contact.append(node('br'), `Ficha OXXO vence el ${formatDateTime(order.oxxoExpiresAt)}`);
+  }
 
   // Acciones según el estado
   const actions = node('div', { className: 'order-actions' });
@@ -293,7 +301,6 @@ orderDetail.addEventListener('click', (event) => {
 
 const zoneForm = document.getElementById('zoneForm');
 const zonesTable = document.getElementById('zonesTable');
-const bankForm = document.getElementById('bankForm');
 
 function renderCoverage() {
   const covered = new Set(shippingZones.filter((zone) => zone.active).flatMap((zone) => zone.states));
@@ -375,7 +382,6 @@ async function loadShipping() {
   const data = await adminRequest('GET', null, '/api/admin/shipping');
   shippingZones = data.zones;
   allStates = data.states;
-  bankForm.bankDetails.value = data.bankDetails || '';
   renderZones();
 }
 
@@ -422,11 +428,31 @@ zonesTable.addEventListener('click', async (event) => {
   }
 });
 
-bankForm.addEventListener('submit', async (event) => {
+// ---------- Pagos ----------
+
+const paymentsForm = document.getElementById('paymentsForm');
+
+async function loadPayments() {
+  const settings = await adminRequest('GET', null, '/api/admin/payments');
+  paymentsForm.installments.checked = settings.installments;
+  paymentsForm.oxxo.checked = settings.oxxo;
+  paymentsForm.message.value = settings.message || '';
+  paymentsForm.bankDetails.value = settings.bankDetails || '';
+  const status = document.getElementById('stripeStatus');
+  status.textContent = settings.stripeConfigured ? 'Stripe conectado' : 'Stripe sin configurar';
+  status.className = `status ${settings.stripeConfigured ? 'status-ok' : 'status-warn'}`;
+}
+
+paymentsForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   try {
-    await adminRequest('PUT', { bankDetails: bankForm.bankDetails.value }, '/api/admin/shipping');
-    showToast(bankForm.bankDetails.value.trim() ? 'Datos bancarios guardados. La transferencia ya aparece en el checkout.' : 'Datos borrados. La transferencia ya no aparece en el checkout.');
+    await adminRequest('PUT', {
+      installments: paymentsForm.installments.checked,
+      oxxo: paymentsForm.oxxo.checked,
+      message: paymentsForm.message.value,
+      bankDetails: paymentsForm.bankDetails.value,
+    }, '/api/admin/payments');
+    showToast('Ajustes de pago guardados. Se aplican desde el próximo pedido.');
   } catch (error) {
     showToast(error.message);
   }
@@ -434,5 +460,5 @@ bankForm.addEventListener('submit', async (event) => {
 
 // Llamada desde dashboard.js al iniciar sesión.
 function loadOrdersAdmin() {
-  return Promise.all([loadAdminOrders(), loadShipping()]);
+  return Promise.all([loadAdminOrders(), loadShipping(), loadPayments()]);
 }

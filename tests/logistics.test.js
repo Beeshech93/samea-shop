@@ -79,3 +79,31 @@ test('ruta de pedidos desconocida responde 404', async () => {
   await orders({ method: 'GET', query: { action: 'nada' }, headers: {} }, res);
   assert.equal(res.statusCode, 404);
 });
+
+test('página de pago de Stripe personalizada', () => {
+  const order = { id: 7, code: 'SAM-1007', email: 'a@b.co', shipping_zone: 'Zona Centro', shipping_days: '2–4 días hábiles' };
+  const lines = [
+    { name: 'Tanga', size: 'M', quantity: 2, unitPrice: 159, image: 'https://img.example/tanga.jpg' },
+    { name: 'Body', size: null, quantity: 1, unitPrice: 379, image: 'http://inseguro/body.jpg' },
+  ];
+  const base = { order, lines, shippingCost: 99, successUrl: 'https://s/ok', cancelUrl: 'https://s/no' };
+
+  const plain = S.buildCheckoutParams(base);
+  assert.deepEqual(plain.payment_method_types, ['card']);
+  assert.equal(plain.payment_method_options, undefined);
+  assert.equal(plain.locale, 'es-419');
+  assert.equal(plain.submit_type, 'pay');
+  assert.equal(plain.line_items.length, 3);
+  assert.deepEqual(plain.line_items[0].price_data.product_data.images, ['https://img.example/tanga.jpg']);
+  assert.match(plain.line_items[0].price_data.product_data.description, /Talla M/);
+  assert.equal(plain.line_items[1].price_data.product_data.images, undefined);
+  assert.equal(plain.line_items[2].price_data.unit_amount, 9900);
+  assert.equal(plain.metadata.order_id, '7');
+
+  const full = S.buildCheckoutParams({ ...base, shippingCost: 0, options: { oxxo: true, installments: true, message: 'Gracias' } });
+  assert.deepEqual(full.payment_method_types, ['card', 'oxxo']);
+  assert.equal(full.payment_method_options.oxxo.expires_after_days, 3);
+  assert.equal(full.payment_method_options.card.installments.enabled, true);
+  assert.equal(full.custom_text.submit.message, 'Gracias');
+  assert.equal(full.line_items.length, 2);
+});

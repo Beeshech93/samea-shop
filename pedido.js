@@ -89,7 +89,14 @@ function renderOrder(order) {
   $('bankDetails').textContent = order.bankDetails || '';
   $('bankAmount').textContent = formatCurrency(order.total);
   $('bankConcept').textContent = order.code;
-  $('cardPendingBox').classList.toggle('hidden', !(order.status === 'pending_payment' && order.paymentMethod === 'card'));
+  const waitingOxxo = order.status === 'pending_payment' && order.stripeMethod === 'oxxo' && Boolean(order.oxxoVoucherUrl);
+  $('oxxoBox').classList.toggle('hidden', !waitingOxxo);
+  if (waitingOxxo) {
+    $('oxxoLink').href = order.oxxoVoucherUrl;
+    $('oxxoAmount').textContent = formatCurrency(order.total);
+    $('oxxoExpires').textContent = order.oxxoExpiresAt ? ` antes del ${formatDate(order.oxxoExpiresAt, true)}` : '';
+  }
+  $('cardPendingBox').classList.toggle('hidden', !(order.status === 'pending_payment' && order.paymentMethod === 'card' && !waitingOxxo));
 
   const hasTracking = Boolean(order.trackingNumber) && ['shipped', 'delivered'].includes(order.status);
   $('trackingBox').classList.toggle('hidden', !hasTracking);
@@ -132,7 +139,8 @@ function renderOrder(order) {
   const a = order.address;
   $('oAddress').textContent = [order.name, a.street, `${a.neighborhood}, C.P. ${a.zip}`, `${a.city}, ${a.state}`, a.notes ? `Ref.: ${a.notes}` : '', order.phone]
     .filter(Boolean).join('\n');
-  $('oShippingInfo').textContent = `${order.shippingZone} · entrega estimada en ${order.shippingDays} · pago con ${order.paymentMethod === 'card' ? 'tarjeta' : 'transferencia'}`;
+  const payLabel = order.paymentMethod === 'transfer' ? 'transferencia' : order.stripeMethod === 'oxxo' ? 'OXXO' : 'tarjeta';
+  $('oShippingInfo').textContent = `${order.shippingZone} · entrega estimada en ${order.shippingDays} · pago con ${payLabel}`;
 
   const history = $('orderHistory');
   history.innerHTML = '';
@@ -165,7 +173,8 @@ async function loadOrder(code, token, cameFromPayment) {
   for (let attempt = 0; attempt < (cameFromPayment ? 5 : 1); attempt += 1) {
     const { order } = await api(`/api/orders/track?${new URLSearchParams(token ? { c: code, t: token } : { c: code })}`);
     renderOrder(order);
-    if (!cameFromPayment || order.status !== 'pending_payment') {
+    const oxxoPending = order.status === 'pending_payment' && order.stripeMethod === 'oxxo';
+    if (!cameFromPayment || order.status !== 'pending_payment' || oxxoPending) {
       if (cameFromPayment && order.status !== 'cancelled') clearCart();
       return;
     }

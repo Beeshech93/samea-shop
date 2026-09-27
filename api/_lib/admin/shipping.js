@@ -1,6 +1,6 @@
 import { sql } from '../../_db.js';
 import { requireAdmin } from '../../_admin.js';
-import { MX_STATES, ensureLogisticsSchema, getSetting, publicZone, setSetting, validateZone } from '../../_logistics.js';
+import { MX_STATES, ensureLogisticsSchema, publicZone, validateZone } from '../../_logistics.js';
 
 export default async function handler(req, res) {
   try {
@@ -9,14 +9,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const zones = await sql`SELECT * FROM shipping_zones ORDER BY price, id`;
-      return res.status(200).json({ zones: zones.map(publicZone), states: MX_STATES, bankDetails: await getSetting('bank_details') });
-    }
-
-    // Datos bancarios para transferencias.
-    if (req.method === 'PUT') {
-      const bankDetails = typeof req.body?.bankDetails === 'string' ? req.body.bankDetails.trim().slice(0, 1000) : '';
-      await setSetting('bank_details', bankDetails);
-      return res.status(200).json({ bankDetails });
+      return res.status(200).json({ zones: zones.map(publicZone), states: MX_STATES });
     }
 
     if (req.method === 'POST' || req.method === 'PATCH') {
@@ -52,7 +45,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    res.setHeader('Allow', 'GET, PUT, POST, PATCH, DELETE');
+    res.setHeader('Allow', 'GET, POST, PATCH, DELETE');
     return res.status(405).json({ error: 'Método no permitido.' });
   } catch (error) {
     console.error('admin shipping error', error);

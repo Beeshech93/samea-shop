@@ -1,7 +1,16 @@
 import { sql } from './_db.js';
-import { cancelOrder, ensureLogisticsSchema, markPaid } from './_logistics.js';
+import { ensureLogisticsSchema } from './_logistics.js';
 import { verifyStripeSignature } from './_stripe.js';
-import { sendOrderMail } from './_order-mail.js';
+import { syncStripeOrder } from './_payments.js';
+
+// Eventos que pueden cambiar el estado de un pedido. En todos se vuelve a
+// consultar a Stripe, que es la fuente de verdad.
+const EVENTS = new Set([
+  'checkout.session.completed',
+  'checkout.session.expired',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed',
+]);
 
 // Stripe firma el cuerpo exacto: hay que leerlo sin procesar.
 async function readRawBody(req) {
@@ -29,20 +38,14 @@ export default async function handler(req, res) {
 
   try {
     const event = JSON.parse(raw);
+    if (!EVENTS.has(event.type)) return res.status(200).json({ received: true });
     const session = event.data?.object || {};
     const orderId = Number(session.metadata?.order_id);
     if (!Number.isInteger(orderId)) return res.status(200).json({ received: true });
 
     await ensureLogisticsSchema();
-    const rows = await sql`SELECT id, stripe_session_id FROM orders WHERE id = ${orderId}`;
-    if (!rows.length || rows[0].stripe_session_id !== session.id) return res.status(200).json({ received: true });
-
-    if (event.type === 'checkout.session.completed' && session.payment_status === 'paid') {
-      const paid = await markPaid(orderId, 'Pago con tarjeta confirmado por Stripe');
-      if (paid) await sendOrderMail('paid', paid);
-    } else if (event.type === 'checkout.session.expired') {
-      await cancelOrder(orderId, 'El pago con tarjeta no se completó a tiempo');
-    }
+    const rows = await sql`SELECT * FROM orders WHERE id = ${orderId}`;
+    if (rows.length && rows[0].stripe_session_id === session.id) await syncStripeOrder(rows[0]);
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error('stripe webhook error', error);

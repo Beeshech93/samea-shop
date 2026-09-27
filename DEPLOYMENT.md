@@ -11,7 +11,7 @@ Cada push a `main` en GitHub se publica automáticamente en Vercel (proyecto `sa
 | `RESEND_API_KEY` | Para recuperar contraseñas | Clave de [Resend](https://resend.com) |
 | `MAIL_FROM` | Para recuperar contraseñas | Remitente verificado en Resend, p. ej. `SAMÉA <hola@samea.shop>` |
 | `STRIPE_SECRET_KEY` | Para pagos con tarjeta | La crea la integración de Stripe en Vercel |
-| `STRIPE_WEBHOOK_SECRET` | Recomendada | Secreto del webhook `https://samea.shop/api/stripe-webhook` (eventos `checkout.session.completed` y `checkout.session.expired`). Sin él, el pago se confirma cuando la clienta vuelve a la tienda o desde el panel («Verificar pago») |
+| `STRIPE_WEBHOOK_SECRET` | Recomendada | Secreto del webhook `https://samea.shop/api/stripe-webhook` (eventos `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` y `checkout.session.async_payment_failed`; los dos últimos son para OXXO). Sin él, el pago se confirma cuando la clienta vuelve a la tienda o desde el panel («Verificar pago») |
 | `SITE_URL` | No | Dominio para los enlaces de los correos. Ahora: `https://samea.shop` |
 
 Las variables nuevas solo se aplican tras un nuevo despliegue (Deployments → ⋯ → Redeploy).
@@ -34,6 +34,7 @@ Los dos valores funcionan; los recomendados quitan el aviso "DNS Change Recommen
 ## Logística
 
 - **Zonas de envío** (panel → Envíos): cada estado pertenece a una zona con precio, envío gratis desde cierto importe y días de entrega. Se crean tres zonas iniciales editables.
-- **Transferencia**: aparece en el checkout solo si hay datos bancarios guardados en panel → Envíos.
+- **Pagos** (panel → Pagos): datos bancarios para transferencia (sin ellos la opción no aparece), meses sin intereses, OXXO y un mensaje junto al botón de pago de Stripe. Meses sin intereses y OXXO deben estar activados también en Stripe (Settings → Payment methods); si no lo están, el pago se hace solo con tarjeta.
+- **Marca en Stripe**: logo, colores y nombre de la página de pago se configuran en Stripe → Settings → Branding.
 - **Flujo de un pedido**: Pendiente de pago → Pagado → En preparación → Enviado (paquetería + guía) → Entregado. Cancelar devuelve el stock.
 - El stock se descuenta al crear el pedido. Los pagos con tarjeta no completados caducan en 1 hora y el stock vuelve solo.
