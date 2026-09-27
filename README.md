@@ -2,6 +2,18 @@
 
 Tienda en línea de lencería publicada en Vercel en **https://samea.shop** (también https://samea-shop.vercel.app) con base de datos Postgres en Neon.
 
+## Direcciones del sitio
+
+| Dirección | Página |
+|---|---|
+| `/` | Tienda |
+| `/checkout` | Finalizar compra |
+| `/pedido` | Seguimiento y «Mis pedidos» (también `/mis-pedidos`) |
+| `/privacidad` | Aviso de privacidad |
+| `/dashboard` | Panel de administración (también `/panel` y `/admin`) |
+
+`vercel.json` activa `cleanUrls`: las direcciones antiguas con `.html` redirigen solas a la versión limpia.
+
 ## Estructura
 
 | Ruta | Qué es |

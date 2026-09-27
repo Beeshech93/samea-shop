@@ -156,7 +156,7 @@ export async function create(req, res) {
   await addEvent(order.id, 'pending_payment', method === 'card' ? 'Pedido creado, esperando pago con tarjeta' : 'Pedido creado, esperando transferencia');
 
   const origin = siteOrigin(req);
-  const orderUrl = `/pedido.html?c=${encodeURIComponent(order.code)}&t=${encodeURIComponent(token)}`;
+  const orderUrl = `/pedido?c=${encodeURIComponent(order.code)}&t=${encodeURIComponent(token)}`;
 
   if (method === 'card') {
     try {
@@ -167,7 +167,7 @@ export async function create(req, res) {
         discount: q.discount,
         successUrl: `${origin}${orderUrl}&pago=ok`,
         options: { oxxo: payments.oxxo, installments: payments.installments, message: payments.message },
-        cancelUrl: `${origin}/checkout.html?cancelado=${encodeURIComponent(order.code)}&t=${encodeURIComponent(token)}`,
+        cancelUrl: `${origin}/checkout?cancelado=${encodeURIComponent(order.code)}&t=${encodeURIComponent(token)}`,
       });
       await sql`UPDATE orders SET stripe_session_id = ${session.id} WHERE id = ${order.id}`;
       return res.status(201).json({ code: order.code, token, redirectUrl: session.url });

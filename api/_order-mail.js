@@ -7,7 +7,7 @@ const money = (value) => Number(value).toLocaleString('es-MX', { style: 'currenc
 function orderLink(order, token) {
   const params = new URLSearchParams({ c: order.code });
   if (token) params.set('t', token);
-  return `${SITE_URL}/pedido.html?${params}`;
+  return `${SITE_URL}/pedido?${params}`;
 }
 
 function itemsHtml(order) {

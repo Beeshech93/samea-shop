@@ -271,7 +271,7 @@ function cartKey(id, size) {
 }
 
 // El carrito se guarda en este navegador para no perderlo al recargar y
-// para que checkout.html lo lea.
+// para que la página /checkout lo lea.
 const CART_STORAGE = 'samea_cart';
 
 function saveCart() {
@@ -519,7 +519,7 @@ function goToCheckout() {
     return;
   }
   saveCart();
-  window.location.href = 'checkout.html';
+  window.location.href = '/checkout';
 }
 
 // ---------- Cuenta ----------

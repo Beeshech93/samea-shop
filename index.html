@@ -36,8 +36,8 @@
 
       <div class="header-actions">
         <span class="auth-status hidden" id="authStatus">Hola, <strong id="authUserName"></strong></span>
-        <a class="text-button hidden" href="pedido.html" data-user-only>Mis pedidos</a>
-        <a class="text-button hidden" href="dashboard.html" data-admin-only>Panel</a>
+        <a class="text-button hidden" href="/pedido" data-user-only>Mis pedidos</a>
+        <a class="text-button hidden" href="/dashboard" data-admin-only>Panel</a>
         <button class="text-button hidden" id="logoutButton" type="button">Salir</button>
         <button class="icon-button" id="loginButton" type="button" aria-label="Iniciar sesión">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
@@ -158,7 +158,7 @@
               <textarea id="commentInput" rows="4" maxlength="500" placeholder="Cuéntanos qué te pareció SAMÉA" required></textarea>
             </label>
             <button class="btn btn-primary" type="submit">Enviar comentario</button>
-            <p class="fine-print">Los comentarios se publican tras ser revisados. Al enviar aceptas el <a href="privacidad.html">aviso de privacidad</a>.</p>
+            <p class="fine-print">Los comentarios se publican tras ser revisados. Al enviar aceptas el <a href="/privacidad">aviso de privacidad</a>.</p>
           </form>
         </div>
         <ul class="comment-list" id="commentList" aria-live="polite"></ul>
@@ -176,7 +176,7 @@
           <input type="email" id="newsletterEmail" placeholder="Tu correo electrónico" required />
           <button class="btn btn-primary" type="submit">Suscribirme</button>
         </form>
-        <p class="fine-print newsletter-note">Al suscribirte aceptas el <a href="privacidad.html">aviso de privacidad</a>. Puedes darte de baja cuando quieras escribiendo a hola@samea.com.mx.</p>
+        <p class="fine-print newsletter-note">Al suscribirte aceptas el <a href="/privacidad">aviso de privacidad</a>. Puedes darte de baja cuando quieras escribiendo a hola@samea.com.mx.</p>
       </div>
     </section>
   </main>
@@ -196,15 +196,15 @@
       <div>
         <h3>Ayuda</h3>
         <a href="mailto:hola@samea.com.mx">hola@samea.com.mx</a>
-        <a href="privacidad.html">Aviso de privacidad</a>
-        <a href="pedido.html">Seguir mi pedido</a>
+        <a href="/privacidad">Aviso de privacidad</a>
+        <a href="/pedido">Seguir mi pedido</a>
         <span>Envíos a todo México</span>
         <span>Cambios en 30 días</span>
       </div>
     </div>
     <div class="container footer-bottom">
       <span>© <span id="year"></span> SAMÉA · samea.shop</span>
-      <span><a href="pedido.html">Seguir mi pedido</a> · <a href="privacidad.html">Aviso de privacidad</a></span>
+      <span><a href="/pedido">Seguir mi pedido</a> · <a href="/privacidad">Aviso de privacidad</a></span>
     </div>
   </footer>
 
@@ -303,7 +303,7 @@
         </label>
         <label class="check-field">
           <input type="checkbox" id="registerPrivacy" required />
-          <span>He leído y acepto el <a href="privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>.</span>
+          <span>He leído y acepto el <a href="/privacidad" target="_blank" rel="noopener">aviso de privacidad</a>.</span>
         </label>
         <button class="btn btn-primary btn-block" type="submit">Crear cuenta</button>
       </form>
@@ -312,6 +312,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>

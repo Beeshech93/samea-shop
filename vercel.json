@@ -1,0 +1,10 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/index", "destination": "/", "permanent": true },
+    { "source": "/panel", "destination": "/dashboard", "permanent": true },
+    { "source": "/admin", "destination": "/dashboard", "permanent": true },
+    { "source": "/mis-pedidos", "destination": "/pedido", "permanent": true }
+  ]
+}

@@ -192,7 +192,7 @@ async function loadMine() {
     orders.forEach((order) => {
       const li = document.createElement('li');
       const link = document.createElement('a');
-      link.href = `pedido.html?c=${encodeURIComponent(order.code)}`;
+      link.href = `/pedido?c=${encodeURIComponent(order.code)}`;
       const code = document.createElement('strong');
       code.textContent = order.code;
       const date = document.createElement('small');
@@ -235,7 +235,7 @@ async function init() {
   if (code) {
     try {
       await loadOrder(code, token, cameFromPayment);
-      if (cameFromPayment) history.replaceState(null, '', `pedido.html?c=${encodeURIComponent(code)}${token ? `&t=${encodeURIComponent(token)}` : ''}`);
+      if (cameFromPayment) history.replaceState(null, '', `/pedido?c=${encodeURIComponent(code)}${token ? `&t=${encodeURIComponent(token)}` : ''}`);
       return;
     } catch (error) {
       showToast(error.status === 404 ? 'Para ver este pedido escribe el número y tu correo.' : error.message);
