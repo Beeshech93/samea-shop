@@ -6,10 +6,13 @@ import register from '../_lib/auth/register.js';
 import forgot from '../_lib/auth/forgot.js';
 import reset from '../_lib/auth/reset.js';
 
+import { guardWrite } from '../_security.js';
+
 const routes = { login, logout, me, register, forgot, reset };
 
 export default function handler(req, res) {
   const route = Object.hasOwn(routes, req.query.action) ? routes[req.query.action] : null;
   if (!route) return res.status(404).json({ error: 'Ruta no encontrada.' });
+  if (!guardWrite(req, res)) return undefined;
   return route(req, res);
 }

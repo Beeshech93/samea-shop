@@ -1,5 +1,5 @@
 import { sql, ensureUsersSchema } from '../../_db.js';
-import { consumePasswordReset, createSession, hashPassword } from '../../_auth.js';
+import { consumePasswordReset, createSession, hashPassword, hashToken, passwordProblem } from '../../_auth.js';
 import { clientIp, isLimited, recordAttempt, tooMany } from '../../_ratelimit.js';
 
 export default async function handler(req, res) {
@@ -23,6 +23,15 @@ export default async function handler(req, res) {
     const ipKey = `reset:ip:${clientIp(req)}`;
     if (await isLimited([{ key: ipKey, limit: 10, minutes: 60 }])) {
       return tooMany(res, 60);
+    }
+
+    // Se valida la contraseña antes de gastar el enlace de un solo uso.
+    const pending = await sql`
+      SELECT u.email FROM password_resets r JOIN users u ON u.id = r.user_id
+      WHERE r.token_hash = ${hashToken(token)} AND r.expires_at > now()`;
+    if (pending.length) {
+      const weak = passwordProblem(password, pending[0].email);
+      if (weak) return res.status(400).json({ error: weak });
     }
 
     const userId = await consumePasswordReset(token);

@@ -1,7 +1,9 @@
 import { ensureCatalogSchema, quoteCart } from '../_catalog.js';
+import { guardWrite } from '../_security.js';
 
 // Calcula subtotal, descuento y total con los precios de la base de datos.
 export default async function handler(req, res) {
+  if (!guardWrite(req, res)) return undefined;
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Método no permitido.' });

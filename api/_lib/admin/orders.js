@@ -3,8 +3,8 @@ import { requireAdmin } from '../../_admin.js';
 import {
   CARRIERS, ORDER_STATUSES, addEvent, adminOrder, cancelOrder, ensureLogisticsSchema, markPaid, orderEvents,
 } from '../../_logistics.js';
-import { expireCheckoutSession, stripeConfigured } from '../../_stripe.js';
-import { syncStripeOrder } from '../../_payments.js';
+import { stripeConfigured } from '../../_stripe.js';
+import { syncStripeOrder, voidStripePayment } from '../../_payments.js';
 import { sendOrderMail } from '../../_order-mail.js';
 
 const text = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
@@ -91,11 +91,24 @@ export default async function handler(req, res) {
         if (!['pending_payment', 'paid', 'preparing'].includes(order.status)) {
           return res.status(400).json({ error: 'Este pedido ya no se puede cancelar.' });
         }
-        if (order.stripe_session_id && order.status === 'pending_payment' && !order.oxxo_voucher_url) {
-          await expireCheckoutSession(order.stripe_session_id);
+        let stripeResult = { action: 'none' };
+        try {
+          stripeResult = await voidStripePayment(order);
+        } catch (error) {
+          console.error('stripe void error', order.code, error.message);
+          return res.status(502).json({ error: 'Stripe no permitió anular o reembolsar el pago. Revisa el pago en Stripe antes de cancelar.' });
         }
         await cancelOrder(id, note || 'Cancelado desde el panel');
-        break;
+        const fresh = await sql`SELECT * FROM orders WHERE id = ${id}`;
+        const messages = {
+          refunded: 'Pedido cancelado y reembolsado con Stripe. El stock volvió al inventario.',
+          cancelled: 'Pedido cancelado; la ficha o el pago pendiente quedó anulado en Stripe.',
+          expired: 'Pedido cancelado; el enlace de pago de Stripe quedó anulado.',
+        };
+        const transferPaid = order.payment_method === 'transfer' && order.payment_status === 'paid';
+        const message = messages[stripeResult.action]
+          || (transferPaid ? 'Pedido cancelado. Recuerda devolver la transferencia a la clienta.' : 'Pedido cancelado. El stock volvió al inventario.');
+        return res.status(200).json({ ok: true, message, order: adminOrder(fresh[0]) });
       }
       case 'notes': {
         await sql`UPDATE orders SET admin_notes = ${text(req.body?.adminNotes, 1000)}, updated_at = now() WHERE id = ${id}`;

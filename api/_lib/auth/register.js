@@ -1,5 +1,5 @@
 import { sql, ensureUsersSchema } from '../../_db.js';
-import { createSession, hashPassword } from '../../_auth.js';
+import { createSession, hashPassword, passwordProblem } from '../../_auth.js';
 import { clearAttempts, clientIp, isLimited, recordAttempt, tooMany } from '../../_ratelimit.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,9 +21,8 @@ export default async function handler(req, res) {
   if (!EMAIL_PATTERN.test(email) || email.length > 254) {
     return res.status(400).json({ error: 'Escribe un correo electrónico válido.' });
   }
-  if (password.length < 8 || password.length > 200) {
-    return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres.' });
-  }
+  const weak = passwordProblem(password, email);
+  if (weak) return res.status(400).json({ error: weak });
   if (body.privacyAccepted !== true) {
     return res.status(400).json({ error: 'Debes aceptar el aviso de privacidad.' });
   }

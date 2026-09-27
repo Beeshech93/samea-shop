@@ -4,7 +4,9 @@ import { sql } from './_db.js';
 
 const scryptAsync = promisify(scrypt);
 const KEY_LENGTH = 64;
-const SESSION_COOKIE = 'samea_session';
+// Prefijo __Host-: el navegador solo la acepta con Secure, Path=/ y sin Domain.
+const SESSION_COOKIE = '__Host-samea_session';
+const LEGACY_COOKIE = 'samea_session';
 const SESSION_DAYS = 30;
 
 export async function hashPassword(password) {
@@ -21,7 +23,7 @@ export async function verifyPassword(password, stored) {
   return timingSafeEqual(key, expected);
 }
 
-function hashToken(token) {
+export function hashToken(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
@@ -34,8 +36,29 @@ function readCookie(req, name) {
   return null;
 }
 
-function sessionCookie(value, maxAge) {
-  return `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+function sessionCookie(value, maxAge, name = SESSION_COOKIE) {
+  return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+function sessionToken(req) {
+  return readCookie(req, SESSION_COOKIE) || readCookie(req, LEGACY_COOKIE);
+}
+
+const COMMON_PASSWORDS = new Set([
+  '12345678', '123456789', '1234567890', '87654321', '11111111', '00000000', '12341234', '11223344',
+  'password', 'password1', 'contraseña', 'contrasena', 'qwerty123', 'qwertyui', 'iloveyou', 'teamo123',
+  'abc12345', 'abcd1234', 'samea123', 'lenceria', 'mexico123', 'admin123', 'welcome1', '1q2w3e4r',
+]);
+
+// Rechaza contraseñas cortas, muy comunes o iguales al correo.
+export function passwordProblem(password, email = '') {
+  if (typeof password !== 'string' || password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+  if (password.length > 200) return 'La contraseña es demasiado larga.';
+  const lower = password.toLowerCase();
+  if (COMMON_PASSWORDS.has(lower) || /^(.)\1+$/.test(password)) return 'Esa contraseña es demasiado común. Elige otra más segura.';
+  const local = String(email).split('@')[0].toLowerCase();
+  if (local.length >= 4 && lower.includes(local)) return 'La contraseña no debe contener tu correo.';
+  return null;
 }
 
 export async function createSession(res, userId) {
@@ -43,11 +66,11 @@ export async function createSession(res, userId) {
   await sql`
     INSERT INTO sessions (token_hash, user_id, expires_at)
     VALUES (${hashToken(token)}, ${userId}, now() + make_interval(days => ${SESSION_DAYS}))`;
-  res.setHeader('Set-Cookie', sessionCookie(token, SESSION_DAYS * 24 * 60 * 60));
+  res.setHeader('Set-Cookie', [sessionCookie(token, SESSION_DAYS * 24 * 60 * 60), sessionCookie('', 0, LEGACY_COOKIE)]);
 }
 
 export async function getSessionUser(req) {
-  const token = readCookie(req, SESSION_COOKIE);
+  const token = sessionToken(req);
   if (!token) return null;
   const rows = await sql`
     SELECT u.id, u.name, u.email, u.is_admin
@@ -57,9 +80,9 @@ export async function getSessionUser(req) {
 }
 
 export async function destroySession(req, res) {
-  const token = readCookie(req, SESSION_COOKIE);
+  const token = sessionToken(req);
   if (token) await sql`DELETE FROM sessions WHERE token_hash = ${hashToken(token)}`;
-  res.setHeader('Set-Cookie', sessionCookie('', 0));
+  res.setHeader('Set-Cookie', [sessionCookie('', 0), sessionCookie('', 0, LEGACY_COOKIE)]);
 }
 
 const RESET_MINUTES = 60;

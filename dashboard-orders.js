@@ -256,7 +256,7 @@ async function openOrder(id) {
 
 const ACTION_CONFIRM = {
   mark_paid: '¿Confirmas que recibiste la transferencia de este pedido?',
-  cancel: '¿Cancelar este pedido? El stock de sus productos se devolverá al inventario.',
+  cancel: '¿Cancelar este pedido? El stock vuelve al inventario. Si se pagó con tarjeta u OXXO, Stripe reembolsa el pago automáticamente; si se pagó por transferencia, tendrás que devolverla tú.',
   deliver: '¿Marcar el pedido como entregado?',
 };
 const ACTION_DONE = {
@@ -265,7 +265,7 @@ const ACTION_DONE = {
   preparing: 'Pedido en preparación.',
   ship: 'Pedido marcado como enviado.',
   deliver: 'Pedido entregado.',
-  cancel: 'Pedido cancelado y stock devuelto.',
+  cancel: 'Pedido cancelado.',
   notes: 'Notas guardadas.',
 };
 

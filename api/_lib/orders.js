@@ -10,13 +10,9 @@ import {
 import { createCheckoutSession, expireCheckoutSession } from '../_stripe.js';
 import { getPaymentSettings, syncStripeOrder } from '../_payments.js';
 import { sendOrderMail } from '../_order-mail.js';
+import { guardWrite, siteOrigin } from '../_security.js';
 
 const round2 = (value) => Math.round(value * 100) / 100;
-
-function siteOrigin(req) {
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  return host ? `https://${host}` : (process.env.SITE_URL || 'https://samea.shop');
-}
 
 async function activeZones() {
   const rows = await sql`SELECT * FROM shipping_zones WHERE active ORDER BY price, id`;
@@ -227,6 +223,7 @@ export const routes = { options, quote, create, track, abandon, mine };
 export async function handle(req, res) {
   const route = Object.hasOwn(routes, req.query?.action) ? routes[req.query.action] : null;
   if (!route) return res.status(404).json({ error: 'Ruta no encontrada.' });
+  if (!guardWrite(req, res)) return undefined;
   try {
     await ensureLogisticsSchema();
     return await route(req, res);

@@ -130,6 +130,14 @@ export function retrievePaymentIntent(id) {
   return stripe('GET', `/payment_intents/${encodeURIComponent(id)}?expand%5B%5D=payment_method`);
 }
 
+export function refundPaymentIntent(id) {
+  return stripe('POST', '/refunds', { payment_intent: id, reason: 'requested_by_customer' });
+}
+
+export function cancelPaymentIntent(id) {
+  return stripe('POST', `/payment_intents/${encodeURIComponent(id)}/cancel`, {});
+}
+
 export async function expireCheckoutSession(id) {
   try {
     await stripe('POST', `/checkout/sessions/${encodeURIComponent(id)}/expire`, {});

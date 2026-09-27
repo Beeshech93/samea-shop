@@ -1,5 +1,6 @@
 import { ensureUsersSchema } from './_db.js';
 import { getSessionUser } from './_auth.js';
+import { isSameOrigin } from './_security.js';
 
 // Correos con acceso de administradora fijado desde Vercel (ADMIN_EMAILS,
 // separados por comas). Sirve para crear la primera administradora; el
@@ -15,21 +16,9 @@ export function isAdminUser(user) {
   return Boolean(user && (user.is_admin || envAdminEmails().includes(user.email)));
 }
 
-// Las peticiones que modifican datos deben venir de la propia tienda.
-function sameOrigin(req) {
-  const origin = req.headers.origin;
-  if (!origin) return false;
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
-  }
-}
-
 // Devuelve la administradora con sesión iniciada; si no hay, responde y devuelve null.
 export async function requireAdmin(req, res) {
-  if (req.method !== 'GET' && !sameOrigin(req)) {
+  if (req.method !== 'GET' && !isSameOrigin(req)) {
     res.status(403).json({ error: 'Origen no permitido.' });
     return null;
   }

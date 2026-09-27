@@ -38,3 +38,12 @@ Los dos valores funcionan; los recomendados quitan el aviso "DNS Change Recommen
 - **Marca en Stripe**: logo, colores y nombre de la página de pago se configuran en Stripe → Settings → Branding.
 - **Flujo de un pedido**: Pendiente de pago → Pagado → En preparación → Enviado (paquetería + guía) → Entregado. Cancelar devuelve el stock.
 - El stock se descuenta al crear el pedido. Los pagos con tarjeta no completados caducan en 1 hora y el stock vuelve solo.
+
+## Seguridad
+
+- Cabeceras en `vercel.json`: CSP estricta (solo scripts propios), HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; la API responde con `Cache-Control: no-store`.
+- Toda escritura (registro, login, pedidos, comentarios, boletín, panel) exige un `Origin` del propio dominio; el webhook de Stripe se valida por firma.
+- Sesión en cookie `__Host-samea_session` (HttpOnly, Secure, SameSite=Lax); contraseñas con scrypt; se rechazan contraseñas comunes o que contienen el correo.
+- Límites de intentos por IP y correo en login, registro, recuperación, pedidos, comentarios, boletín y búsqueda de pedidos.
+- Cancelar un pedido pagado con Stripe lo reembolsa; si estaba pendiente (enlace de pago o ficha OXXO) lo anula. Un pago que llegue a un pedido ya cancelado se reembolsa solo.
+- `robots.txt` excluye panel, checkout, pedidos y API; contacto de seguridad en `/.well-known/security.txt`.

@@ -1,6 +1,9 @@
 import { sql } from './_db.js';
 import { addEvent, cancelOrder, getSetting, markPaid, setSetting } from './_logistics.js';
-import { retrieveCheckoutSession, retrievePaymentIntent, stripeConfigured } from './_stripe.js';
+import {
+  cancelPaymentIntent, expireCheckoutSession, refundPaymentIntent, retrieveCheckoutSession, retrievePaymentIntent,
+  stripeConfigured,
+} from './_stripe.js';
 import { sendOrderMail } from './_order-mail.js';
 
 // Opciones de pago que la administradora controla desde el panel.
@@ -80,4 +83,50 @@ export async function syncStripeOrder(order) {
   }
   const fresh = await sql`SELECT * FROM orders WHERE id = ${order.id}`;
   return fresh[0] || order;
+}
+
+const intentId = (session) => (typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id);
+
+async function markRefunded(order, amountNote) {
+  await sql`UPDATE orders SET payment_status = 'refunded', updated_at = now() WHERE id = ${order.id}`;
+  await addEvent(order.id, 'cancelled', amountNote);
+}
+
+// Antes de cancelar un pedido de Stripe: si ya se cobró, lo reembolsa; si
+// sigue pendiente (sesión abierta o ficha OXXO), lo anula para que no se
+// pueda pagar después. Lanza error si Stripe no lo permite.
+export async function voidStripePayment(order) {
+  if (order.payment_method !== 'card' || !order.stripe_session_id || !stripeConfigured()) return { action: 'none' };
+  const session = await retrieveCheckoutSession(order.stripe_session_id);
+  if (session.status === 'open') {
+    await expireCheckoutSession(session.id);
+    return { action: 'expired' };
+  }
+  const id = intentId(session);
+  if (!id) return { action: 'none' };
+  const intent = await retrievePaymentIntent(id);
+  if (intent.status === 'succeeded') {
+    if (order.payment_status !== 'refunded') {
+      await refundPaymentIntent(id);
+      await markRefunded(order, `Reembolso de ${Number(order.total).toFixed(2)} MXN enviado con Stripe`);
+    }
+    return { action: 'refunded' };
+  }
+  if (['requires_action', 'requires_payment_method', 'requires_confirmation', 'requires_capture'].includes(intent.status)) {
+    await cancelPaymentIntent(id);
+    return { action: 'cancelled' };
+  }
+  return { action: 'none' };
+}
+
+// Si Stripe cobra un pedido que ya estaba cancelado (p. ej. una ficha OXXO
+// pagada justo al vencer), se devuelve el dinero automáticamente.
+export async function refundIfCancelled(order) {
+  if (order.status !== 'cancelled' || order.payment_status === 'refunded' || !order.stripe_session_id || !stripeConfigured()) return false;
+  const session = await retrieveCheckoutSession(order.stripe_session_id);
+  const id = intentId(session);
+  if (!id || session.payment_status !== 'paid') return false;
+  await refundPaymentIntent(id);
+  await markRefunded(order, 'Pago recibido en un pedido cancelado: reembolsado automáticamente con Stripe');
+  return true;
 }

@@ -21,3 +21,13 @@ test('rol de administradora por columna o por ADMIN_EMAILS', () => {
   assert.equal(isAdminUser({ email: 'z@z.com', is_admin: false }), false);
   assert.equal(isAdminUser(null), false);
 });
+
+test('reglas de contraseña', async () => {
+  const { passwordProblem } = await import('../api/_auth.js');
+  assert.ok(passwordProblem('1234567'));
+  assert.ok(passwordProblem('12345678'));
+  assert.ok(passwordProblem('Password'));
+  assert.ok(passwordProblem('aaaaaaaaaa'));
+  assert.ok(passwordProblem('ana.lopez2026', 'ana.lopez@x.com'));
+  assert.equal(passwordProblem('Seda&Encaje-2026', 'ana@x.com'), null);
+});

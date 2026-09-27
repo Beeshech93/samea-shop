@@ -1,11 +1,13 @@
 import { sql, ensureSchema, ensureUsersSchema } from './_db.js';
 import { clientIp, isLimited, recordAttempt, tooMany } from './_ratelimit.js';
+import { guardWrite } from './_security.js';
 
 const MAX_COMMENT = 500;
 const MAX_NAME = 60;
 
 export default async function handler(req, res) {
   try {
+  if (!guardWrite(req, res)) return undefined;
     await ensureSchema();
 
     if (req.method === 'GET') {

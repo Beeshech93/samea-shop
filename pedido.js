@@ -171,7 +171,8 @@ function clearCart() {
 // Vuelta desde Stripe: el webhook puede tardar unos segundos; se reintenta.
 async function loadOrder(code, token, cameFromPayment) {
   for (let attempt = 0; attempt < (cameFromPayment ? 5 : 1); attempt += 1) {
-    const { order } = await api(`/api/orders/track?${new URLSearchParams(token ? { c: code, t: token } : { c: code })}`);
+    // POST: el token del enlace no queda en los registros del servidor.
+    const { order } = await api('/api/orders/track', token ? { c: code, t: token } : { c: code });
     renderOrder(order);
     const oxxoPending = order.status === 'pending_payment' && order.stripeMethod === 'oxxo';
     if (!cameFromPayment || order.status !== 'pending_payment' || oxxoPending) {

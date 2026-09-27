@@ -26,7 +26,31 @@ test('las rutas de administración rechazan cambios desde otro origen', async ()
   }
 });
 
+const SAME = { host: 'samea.shop', origin: 'https://samea.shop' };
+
 test('el registro exige aceptar el aviso de privacidad', async () => {
-  const res = await call(auth, { method: 'POST', query: { action: 'register' }, body: { name: 'Ana', email: 'a@b.co', password: '12345678' } });
+  const res = await call(auth, { method: 'POST', query: { action: 'register' }, headers: SAME, body: { name: 'Ana', email: 'a@b.co', password: '12345678' } });
   assert.equal(res.statusCode, 400);
+});
+
+test('las escrituras públicas desde otro sitio se rechazan (CSRF)', async () => {
+  const { default: orders } = await import('../api/orders/[action].js');
+  const { default: comments } = await import('../api/comments.js');
+  const { default: newsletter } = await import('../api/newsletter.js');
+  const { default: quote } = await import('../api/cart/quote.js');
+  const evil = { host: 'samea.shop', origin: 'https://malo.example' };
+  const cases = [
+    [auth, { query: { action: 'login' } }],
+    [auth, { query: { action: 'register' } }],
+    [auth, { query: { action: 'logout' } }],
+    [orders, { query: { action: 'create' } }],
+    [orders, { query: { action: 'abandon' } }],
+    [comments, {}],
+    [newsletter, {}],
+    [quote, {}],
+  ];
+  for (const [handler, req] of cases) {
+    assert.equal((await call(handler, { method: 'POST', headers: evil, ...req })).statusCode, 403, JSON.stringify(req));
+    assert.equal((await call(handler, { method: 'POST', headers: { host: 'samea.shop' }, ...req })).statusCode, 403, 'sin Origin');
+  }
 });

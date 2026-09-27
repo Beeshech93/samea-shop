@@ -1,9 +1,11 @@
 import { sql, ensureNewsletterSchema, ensureUsersSchema } from './_db.js';
 import { clientIp, isLimited, recordAttempt, tooMany } from './_ratelimit.js';
+import { guardWrite } from './_security.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default async function handler(req, res) {
+  if (!guardWrite(req, res)) return undefined;
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Método no permitido.' });

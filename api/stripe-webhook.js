@@ -1,7 +1,7 @@
 import { sql } from './_db.js';
 import { ensureLogisticsSchema } from './_logistics.js';
 import { verifyStripeSignature } from './_stripe.js';
-import { syncStripeOrder } from './_payments.js';
+import { refundIfCancelled, syncStripeOrder } from './_payments.js';
 
 // Eventos que pueden cambiar el estado de un pedido. En todos se vuelve a
 // consultar a Stripe, que es la fuente de verdad.
@@ -45,7 +45,10 @@ export default async function handler(req, res) {
 
     await ensureLogisticsSchema();
     const rows = await sql`SELECT * FROM orders WHERE id = ${orderId}`;
-    if (rows.length && rows[0].stripe_session_id === session.id) await syncStripeOrder(rows[0]);
+    if (rows.length && rows[0].stripe_session_id === session.id) {
+      const order = await syncStripeOrder(rows[0]);
+      await refundIfCancelled(order);
+    }
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error('stripe webhook error', error);
