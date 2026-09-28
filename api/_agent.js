@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { sql } from './_db.js';
-import { CATEGORIES, ensureCatalogSchema, publicProduct } from './_catalog.js';
+import { sql, ensureNewsletterSchema } from './_db.js';
+import { CATEGORIES, ensureCatalogSchema, publicProduct, quoteCart } from './_catalog.js';
 import { MX_STATES, ORDER_STATUSES, CARRIERS, ensureLogisticsSchema, shippingCost, shippingDays, trackingLink, zoneForState } from './_logistics.js';
 import { getPaymentSettings } from './_payments.js';
+import { recordOutgoing, sendWhatsappImage, setOutgoingId } from './_whatsapp.js';
 
 const MODEL = 'claude-opus-5';
 const MAX_TOOL_ROUNDS = 6;
@@ -22,7 +23,11 @@ Qué haces:
 - Das el costo y los días de envío con cotizar_envio, según el estado de la clienta.
 - Informas promociones vigentes con promociones_vigentes y métodos de pago con info_tienda.
 - Consultas pedidos con consultar_pedido. Necesitas el número de pedido (formato SAM-1001). Si la herramienta pide verificación, pide a la clienta el correo con el que compró. Nunca reveles datos de un pedido que la herramienta no haya autorizado.
-- Para comprar, la clienta elige en la tienda y paga en ${SITE}/checkout (tarjeta, y según disponibilidad meses sin intereses, OXXO o transferencia). Tú no tomas pedidos ni cobras por WhatsApp.
+- Si la clienta quiere comprar, arma su carrito con crear_enlace_compra (productos, tallas, cantidades y código de descuento si aplica) y mándale el enlace: al abrirlo verá todo listo para pagar en la tienda (tarjeta y, según disponibilidad, meses sin intereses, OXXO o transferencia). Confirma antes talla y cantidad. Tú no cobras ni pides datos de pago.
+- Si quiere ver un producto, usa enviar_foto_producto para mandarle la foto por WhatsApp.
+- Si duda de su talla, pregúntale sus medidas en centímetros y usa recomendar_talla.
+- Si pregunta por sus pedidos sin dar número, usa mis_pedidos: busca las compras hechas con este mismo número de WhatsApp.
+- Si quiere recibir novedades, pídele su correo y su permiso explícito, y usa suscribir_boletin.
 
 Cuándo pasas a una persona (herramienta pasar_a_persona):
 - La clienta lo pide, hay una queja, un problema con un pago o una entrega, un cambio o devolución, o una pregunta que no puedes responder con las herramientas.
@@ -81,6 +86,74 @@ const TOOLS = [
     },
   },
   {
+    name: 'crear_enlace_compra',
+    description: 'Arma un carrito con productos (id de buscar_productos), talla y cantidad, valida precios, existencias y el código de descuento, y devuelve un enlace que abre la tienda con ese carrito listo para pagar, más el total estimado sin envío.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        productos: {
+          type: 'array',
+          minItems: 1,
+          maxItems: 10,
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'integer', description: 'id del producto (de buscar_productos).' },
+              talla: { type: 'string', description: 'Talla exacta tal como aparece en el producto; vacío si no tiene tallas.' },
+              cantidad: { type: 'integer', minimum: 1, maximum: 20 },
+            },
+            required: ['id', 'cantidad'],
+            additionalProperties: false,
+          },
+        },
+        codigo: { type: 'string', description: 'Código promocional opcional.' },
+      },
+      required: ['productos'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'enviar_foto_producto',
+    description: 'Envía por WhatsApp la foto de un producto a la clienta, con su nombre y precio.',
+    input_schema: {
+      type: 'object',
+      properties: { id: { type: 'integer', description: 'id del producto (de buscar_productos).' } },
+      required: ['id'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'recomendar_talla',
+    description: 'Recomienda talla según medidas en centímetros. Para sujetadores usa busto y bajo_busto; para panties usa cadera (y cintura si la da); para bralettes, bodies y conjuntos usa busto y cadera.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        tipo: { type: 'string', enum: ['sujetador', 'panty', 'bralette_body_conjunto'] },
+        busto: { type: 'number', description: 'Contorno de busto en cm.' },
+        bajo_busto: { type: 'number', description: 'Contorno bajo el busto en cm.' },
+        cintura: { type: 'number', description: 'Cintura en cm.' },
+        cadera: { type: 'number', description: 'Cadera en cm.' },
+      },
+      required: ['tipo'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'mis_pedidos',
+    description: 'Lista los pedidos recientes hechos con el mismo número de teléfono de este chat de WhatsApp.',
+    input_schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'suscribir_boletin',
+    description: 'Suscribe un correo al boletín de SAMÉA. Úsala solo si la clienta lo pidió y dio su correo.',
+    input_schema: {
+      type: 'object',
+      properties: { correo: { type: 'string' } },
+      required: ['correo'],
+      additionalProperties: false,
+    },
+  },
+  {
     name: 'pasar_a_persona',
     description: 'Transfiere la conversación a una asesora humana y pausa las respuestas automáticas.',
     input_schema: {
@@ -122,6 +195,7 @@ async function buscarProductos({ texto = '', categoria } = {}) {
     .map((row) => {
       const p = publicProduct(row);
       return {
+        id: p.id,
         nombre: p.name,
         categoria: CATEGORIES[p.category] || p.category,
         precio: p.finalPrice,
@@ -219,12 +293,134 @@ async function consultarPedido({ numero_pedido: code, correo }, context) {
   };
 }
 
+const round2 = (value) => Math.round(value * 100) / 100;
+
+async function crearEnlaceCompra({ productos = [], codigo = '' }) {
+  await ensureCatalogSchema();
+  const items = productos.slice(0, 10).map((p) => ({
+    productId: Number(p.id),
+    size: p.talla ? String(p.talla).trim().toUpperCase() : null,
+    quantity: Math.min(20, Math.max(1, Number(p.cantidad) || 1)),
+  }));
+  const code = String(codigo || '').trim().toUpperCase().slice(0, 30);
+  const quote = await quoteCart(items, code);
+  if (quote.error && !quote.lines) return { error: quote.error };
+  const stock = await sql`SELECT id, name, stock FROM products WHERE id = ANY(${items.map((i) => i.productId)})`;
+  const short = items.filter((i) => {
+    const row = stock.find((r) => r.id === i.productId);
+    return !row || row.stock < i.quantity;
+  }).map((i) => stock.find((r) => r.id === i.productId)?.name || `#${i.productId}`);
+  if (short.length) return { error: `No hay existencias suficientes de: ${short.join(', ')}.` };
+
+  const cartParam = items.map((i) => [i.productId, i.size || '', i.quantity].map(encodeURIComponent).join(':')).join(',');
+  const params = new URLSearchParams({ carrito: cartParam });
+  if (quote.promotion) params.set('codigo', quote.promotion.code);
+  return {
+    enlace: `${SITE}/?${params}`,
+    productos: quote.lines.map((l) => `${l.quantity} × ${l.name}${l.size ? ` (talla ${l.size})` : ''} — $${l.lineTotal}`),
+    subtotal: quote.subtotal,
+    descuento: quote.discount,
+    codigo_aplicado: quote.promotion?.code || null,
+    aviso_codigo: code && !quote.promotion ? quote.error || 'El código no se pudo aplicar.' : undefined,
+    total_sin_envio: round2(quote.subtotal - quote.discount),
+    nota: 'El envío se calcula en el checkout según su estado.',
+  };
+}
+
+async function enviarFotoProducto({ id }, context) {
+  await ensureCatalogSchema();
+  const rows = await sql`SELECT * FROM products WHERE id = ${Number(id)} AND active`;
+  if (!rows.length) return { error: 'Ese producto no está disponible.' };
+  const p = publicProduct(rows[0]);
+  if (!p.image) return { error: 'Este producto no tiene foto.' };
+  const imageUrl = /^https:\/\//.test(p.image) ? p.image : `${SITE}/${p.image.replace(/^\/+/, '')}`;
+  if (!context.jid) return { error: 'No se puede enviar la foto en este chat.' };
+  const caption = `*${p.name}* · $${p.finalPrice} MXN${p.discountPercent ? ` (-${p.discountPercent}%)` : ''}${p.sizes.length ? `\nTallas: ${p.sizes.join(', ')}` : ''}`;
+  const rowId = await recordOutgoing(context.jid, 'bot', `[Foto] ${p.name}`);
+  const waId = await sendWhatsappImage(context.jid, imageUrl, caption);
+  await setOutgoingId(rowId, waId);
+  return { enviada: true, producto: p.name };
+}
+
+// Tabla orientativa de tallas (cm). Letras: CH/S, M, G/L, EG/XL.
+const LETTER_SIZES = [
+  { letra: 'CH (S)', busto: [80, 86], cadera: [86, 92], cintura: [62, 68] },
+  { letra: 'M', busto: [87, 93], cadera: [93, 99], cintura: [69, 75] },
+  { letra: 'G (L)', busto: [94, 100], cadera: [100, 106], cintura: [76, 82] },
+  { letra: 'EG (XL)', busto: [101, 108], cadera: [107, 114], cintura: [83, 90] },
+];
+
+function letterFor(measure, value) {
+  if (!value) return null;
+  const found = LETTER_SIZES.find((s) => value <= s[measure][1]) || LETTER_SIZES[LETTER_SIZES.length - 1];
+  const outOfRange = value < LETTER_SIZES[0][measure][0] - 4 || value > LETTER_SIZES[LETTER_SIZES.length - 1][measure][1] + 4;
+  return { talla: found.letra, fuera_de_tabla: outOfRange };
+}
+
+export function recomendarTalla({ tipo, busto, bajo_busto: underbust, cintura, cadera }) {
+  const nums = [busto, underbust, cintura, cadera].filter((v) => v !== undefined);
+  if (nums.some((v) => !Number.isFinite(v) || v < 50 || v > 180)) return { error: 'Las medidas deben estar en centímetros (entre 50 y 180).' };
+  if (tipo === 'sujetador') {
+    if (!busto || !underbust) return { error: 'Para sujetador necesito busto y bajo busto en cm.' };
+    const bands = [[72, 32], [77, 34], [82, 36], [87, 38], [92, 40]];
+    const band = (bands.find(([max]) => underbust <= max) || [0, 42])[1];
+    const diff = busto - underbust;
+    const cups = [[13, 'A'], [15.5, 'B'], [18, 'C'], [20.5, 'D'], [23, 'DD']];
+    const cup = (cups.find(([max]) => diff <= max) || [0, 'E'])[1];
+    return { talla: `${band}${cup}`, nota: 'Orientativa. Si está entre dos tallas, la banda más ajustada suele sostener mejor.' };
+  }
+  if (tipo === 'panty') {
+    const r = letterFor('cadera', cadera) || letterFor('cintura', cintura);
+    if (!r) return { error: 'Para panties necesito la cadera (o la cintura) en cm.' };
+    return { ...r, nota: 'Orientativa; si está entre dos tallas y prefiere comodidad, la mayor.' };
+  }
+  const a = letterFor('busto', busto);
+  const b = letterFor('cadera', cadera);
+  if (!a && !b) return { error: 'Necesito busto y/o cadera en cm.' };
+  const order = LETTER_SIZES.map((s) => s.letra);
+  const pick = [a, b].filter(Boolean).sort((x, y) => order.indexOf(y.talla) - order.indexOf(x.talla))[0];
+  return { ...pick, nota: 'Orientativa; se toma la talla mayor entre busto y cadera.' };
+}
+
+async function misPedidos(_input, context) {
+  await ensureLogisticsSchema();
+  const digits = lastDigits(context.phone);
+  if (digits.length < 10) return { pedidos: [], mensaje: 'No puedo identificar el número de este chat. Pide el número de pedido y el correo.' };
+  const rows = await sql`
+    SELECT code, status, total, created_at, carrier, tracking_number FROM orders
+    WHERE right(regexp_replace(phone, '\D', '', 'g'), 10) = ${digits}
+    ORDER BY created_at DESC LIMIT 5`;
+  return {
+    pedidos: rows.map((o) => ({
+      pedido: o.code,
+      estado: ORDER_STATUSES[o.status] || o.status,
+      total: Number(o.total),
+      fecha: o.created_at,
+      guia: o.tracking_number ? `${CARRIERS[o.carrier] || o.carrier || ''} ${o.tracking_number}`.trim() : null,
+    })),
+    nota: rows.length ? 'Para más detalle usa consultar_pedido con el número.' : 'No hay pedidos con este número de WhatsApp.',
+  };
+}
+
+async function suscribirBoletin({ correo }) {
+  const email = String(correo || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return { error: 'Ese correo no es válido.' };
+  await ensureNewsletterSchema();
+  await sql`INSERT INTO newsletter_subscribers (email) VALUES (${email}) ON CONFLICT (email) DO NOTHING`;
+  return { suscrita: true, nota: 'Puede darse de baja escribiendo a hola@samea.com.mx.' };
+}
+
 const HANDLERS = {
   buscar_productos: buscarProductos,
   cotizar_envio: cotizarEnvio,
   promociones_vigentes: promocionesVigentes,
   info_tienda: infoTienda,
   consultar_pedido: consultarPedido,
+  crear_enlace_compra: crearEnlaceCompra,
+  enviar_foto_producto: enviarFotoProducto,
+  recomendar_talla: recomendarTalla,
+  mis_pedidos: misPedidos,
+  suscribir_boletin: suscribirBoletin,
 };
 
 // ---------- Conversación ----------

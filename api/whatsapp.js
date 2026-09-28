@@ -63,7 +63,7 @@ async function handleCustomerMessage(message) {
     await recordAttempt(key);
 
     const history = await recentMessages(message.jid, 20);
-    const result = await runAgent(history, { phone: message.phone });
+    const result = await runAgent(history, { phone: message.phone, jid: message.jid });
     if (result.reply) await reply(message.jid, result.reply);
     if (result.handoff) {
       await setMode(message.jid, 'human', result.handoff);

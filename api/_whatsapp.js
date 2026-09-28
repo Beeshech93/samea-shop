@@ -127,6 +127,26 @@ export function isOwnerChat(message) {
   return Boolean(owner) && Boolean(message.phone) && message.phone.slice(-10) === owner.slice(-10);
 }
 
+// Envía una imagen (por URL pública) con un pie de foto.
+export async function sendWhatsappImage(jid, imageUrl, caption = '') {
+  const base = evolutionBaseUrl();
+  const response = await fetch(`${base}/message/sendMedia/${encodeURIComponent(process.env.EVOLUTION_INSTANCE)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
+    body: JSON.stringify({
+      number: jid,
+      mediatype: 'image',
+      mimetype: imageUrl.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg',
+      media: imageUrl,
+      caption: String(caption).slice(0, 1000),
+      fileName: 'samea.jpg',
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`Evolution API ${response.status}`);
+  return data?.key?.id ? String(data.key.id) : null;
+}
+
 export async function upsertConversation({ jid, phone, name }) {
   await sql`
     INSERT INTO wa_conversations (jid, phone, name) VALUES (${jid}, ${phone}, ${name || ''})

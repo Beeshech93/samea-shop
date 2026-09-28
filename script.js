@@ -255,9 +255,11 @@ async function loadProducts() {
   }
   catalogLoaded = true;
   restoreCart();
+  const fromLink = applyCartLink();
   renderCatalog();
   renderCart();
   refreshQuote();
+  if (fromLink) openCart();
 }
 
 // ---------- Carrito ----------
@@ -285,6 +287,37 @@ function saveCart() {
   }
 }
 
+// Enlace de compra del asistente de WhatsApp: /?carrito=ID:TALLA:CANT,...&codigo=APP10
+// Sustituye el carrito por esos productos y se quita de la URL.
+function applyCartLink() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('carrito');
+  if (!raw) return false;
+  const items = [];
+  raw.split(',').slice(0, 20).forEach((part) => {
+    const [idText, sizeText = '', qtyText = '1'] = part.split(':').map(decodeURIComponent);
+    const product = products.find((item) => item.id === Number(idText));
+    if (!product || !product.inStock) return;
+    const size = sizeText || null;
+    if (product.sizes.length && !product.sizes.includes(size)) return;
+    items.push({ id: product.id, size, quantity: Math.min(20, Math.max(1, Number(qtyText) || 1)) });
+  });
+  const code = (params.get('codigo') || '').trim().toUpperCase().slice(0, 30);
+  params.delete('carrito');
+  params.delete('codigo');
+  const query = params.toString();
+  history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+  if (!items.length) return false;
+  try {
+    localStorage.setItem(CART_STORAGE, JSON.stringify({ items, code }));
+  } catch {
+    // Sin almacenamiento: se carga igual en esta visita.
+  }
+  cart.length = 0;
+  restoreCartFrom({ items, code });
+  return true;
+}
+
 function restoreCart() {
   let saved = null;
   try {
@@ -294,6 +327,10 @@ function restoreCart() {
   }
   if (!saved || !Array.isArray(saved.items)) return;
   cart.length = 0;
+  restoreCartFrom(saved);
+}
+
+function restoreCartFrom(saved) {
   saved.items.forEach((entry) => {
     const product = products.find((item) => item.id === entry.id);
     const quantity = Math.min(20, Math.max(1, Number(entry.quantity) || 1));
