@@ -79,3 +79,17 @@ test('historial para la IA: une turnos y marca respuestas del equipo', () => {
   assert.match(messages[1].content, /\[Respuesta del equipo SAMÉA\] Te ayudo yo/);
   assert.equal(messages.at(-1).content, 'Gracias');
 });
+
+test('el webhook acepta el secreto en la cabecera x-webhook-token', async () => {
+  process.env.WHATSAPP_WEBHOOK_SECRET = 'secreto-cabecera';
+  const res = { statusCode: 0 };
+  res.status = (c) => { res.statusCode = c; return res; };
+  res.json = () => res;
+  res.setHeader = () => {};
+  // Autorizado pero sin Evolution configurado: pasa el filtro y responde 503.
+  await webhook({ method: 'POST', query: {}, headers: { 'x-webhook-token': 'secreto-cabecera' }, body: {} }, res);
+  assert.equal(res.statusCode, 503);
+  await webhook({ method: 'POST', query: {}, headers: { 'x-webhook-token': 'otro' }, body: {} }, res);
+  assert.equal(res.statusCode, 401);
+  delete process.env.WHATSAPP_WEBHOOK_SECRET;
+});

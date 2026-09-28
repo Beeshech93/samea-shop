@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link rel="stylesheet" href="styles.css?v=15" />
 </head>
 <body class="is-locked">
   <div class="admin">
@@ -148,6 +148,20 @@
             </div>
           </div>
           <p class="coverage-note" id="waStatus"></p>
+          <div class="wa-connection" id="waConnection">
+            <div>
+              <strong>Número de WhatsApp</strong>
+              <span class="status" id="waConnState">—</span>
+            </div>
+            <div class="wa-connection-actions">
+              <button class="btn btn-primary btn-small" id="waConnect" type="button">Conectar WhatsApp</button>
+              <button class="text-button danger-link hidden" id="waLogout" type="button">Desconectar</button>
+            </div>
+            <div class="wa-qr hidden" id="waQr">
+              <img id="waQrImg" alt="Código QR para vincular WhatsApp" />
+              <p>En tu teléfono: WhatsApp → <strong>Dispositivos vinculados</strong> → <strong>Vincular un dispositivo</strong> y escanea este código. <span id="waPairing"></span></p>
+            </div>
+          </div>
           <div class="wa-layout">
             <ul class="wa-list" id="waList"></ul>
             <div class="wa-thread" id="waThread">
@@ -515,6 +529,6 @@
   <script src="dashboard.js?v=8"></script>
   <script src="dashboard-catalog.js?v=2"></script>
   <script src="dashboard-orders.js?v=3"></script>
-  <script src="dashboard-whatsapp.js?v=1"></script>
+  <script src="dashboard-whatsapp.js?v=2"></script>
 </body>
 </html>

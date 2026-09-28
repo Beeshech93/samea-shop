@@ -1,7 +1,8 @@
 import { sql } from '../../_db.js';
 import { requireAdmin } from '../../_admin.js';
 import {
-  agentConfigured, ensureWhatsappSchema, evolutionConfigured, recordOutgoing, sendWhatsappText, setMode, setOutgoingId,
+  agentConfigured, connectionState, ensureWhatsappSchema, evolutionConfigured, logoutInstance, recordOutgoing,
+  sendWhatsappText, setMode, setOutgoingId, setupInstance,
 } from '../../_whatsapp.js';
 
 const validJid = (value) => typeof value === 'string' && /^[0-9A-Za-z._:-]+@(s\.whatsapp\.net|lid)$/.test(value);
@@ -10,6 +11,31 @@ export default async function handler(req, res) {
   try {
     if (!(await requireAdmin(req, res))) return;
     await ensureWhatsappSchema();
+
+    // Conexión del número (instancia de Evolution API).
+    if (req.method === 'GET' && req.query?.view === 'connection') {
+      if (!evolutionConfigured()) return res.status(200).json({ state: 'not_configured' });
+      try {
+        return res.status(200).json({ state: await connectionState() });
+      } catch (error) {
+        console.error('evolution state error', error.message);
+        return res.status(200).json({ state: 'unreachable' });
+      }
+    }
+    if (req.method === 'POST' && ['connect', 'logout'].includes(req.body?.action)) {
+      if (!evolutionConfigured()) return res.status(503).json({ error: 'Faltan las variables de Evolution API en Vercel.' });
+      if (!process.env.WHATSAPP_WEBHOOK_SECRET) return res.status(503).json({ error: 'Falta WHATSAPP_WEBHOOK_SECRET en Vercel.' });
+      try {
+        if (req.body.action === 'logout') {
+          await logoutInstance();
+          return res.status(200).json({ state: 'close' });
+        }
+        return res.status(200).json(await setupInstance(process.env.SITE_URL || 'https://samea.shop'));
+      } catch (error) {
+        console.error('evolution setup error', error.message);
+        return res.status(502).json({ error: `${error.message}. Revisa la URL y la API key de Evolution.` });
+      }
+    }
 
     if (req.method === 'GET') {
       const jid = req.query?.jid;

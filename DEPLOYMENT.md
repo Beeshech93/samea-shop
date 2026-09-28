@@ -62,7 +62,7 @@ Los dos valores funcionan; los recomendados quitan el aviso "DNS Change Recommen
 | `ANTHROPIC_API_KEY` | Clave de https://console.anthropic.com |
 | `WHATSAPP_OWNER_NUMBER` | Opcional: tu número (con lada, p. ej. `5215512345678`) para recibir avisos cuando una clienta pide a una persona |
 
-3. **Webhook en Evolution API** (instancia → Webhook): URL `https://samea.shop/api/whatsapp?token=<WHATSAPP_WEBHOOK_SECRET>`, evento `MESSAGES_UPSERT`, sin «webhook by events».
+3. **Conectar**: panel → WhatsApp → «Conectar WhatsApp». Crea la instancia si no existe, configura el webhook (`https://samea.shop/api/whatsapp`, evento `MESSAGES_UPSERT`, secreto en la cabecera `x-webhook-token`) y muestra el QR para escanear desde WhatsApp → Dispositivos vinculados.
 
 Funcionamiento: el bot responde solo a chats individuales de texto; las herramientas del agente son de solo lectura (productos, envíos, promociones, pagos y estado de pedidos verificado por correo o por el número de WhatsApp de la compra). Pasa a una persona cuando lo pide la clienta o hay quejas; también se pausa si alguien del equipo responde desde el teléfono o desde el panel (sección WhatsApp). Límite: 30 mensajes por hora por chat.
 

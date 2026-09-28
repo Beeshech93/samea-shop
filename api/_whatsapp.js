@@ -46,7 +46,8 @@ export function ensureWhatsappSchema() {
   return whatsappReady;
 }
 
-// El webhook lleva un secreto en la URL porque Evolution API no firma las peticiones.
+// Evolution API no firma las peticiones: el webhook lleva un secreto en la
+// cabecera x-webhook-token (o, como alternativa, en ?token= de la URL).
 export function webhookAuthorized(token) {
   const expected = process.env.WHATSAPP_WEBHOOK_SECRET;
   if (!expected || typeof token !== 'string' || !token) return false;
@@ -167,4 +168,61 @@ export async function isOwnEcho(jid, waMessageId, content) {
       AND (wa_message_id = ${waMessageId} OR (content = ${content} AND created_at > now() - interval '10 minutes'))
     LIMIT 1`;
   return rows.length > 0;
+}
+
+// ---------- Gestión de la instancia (desde el panel) ----------
+
+async function evolution(method, path, body) {
+  const base = process.env.EVOLUTION_API_URL.replace(/\/$/, '');
+  const response = await fetch(`${base}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await response.json().catch(() => ({}));
+  return { ok: response.ok, status: response.status, data };
+}
+
+const instanceName = () => encodeURIComponent(process.env.EVOLUTION_INSTANCE);
+
+export async function connectionState() {
+  const result = await evolution('GET', `/instance/connectionState/${instanceName()}`);
+  if (result.status === 404) return 'missing';
+  if (!result.ok) throw new Error(`Evolution API ${result.status}`);
+  return result.data?.instance?.state || result.data?.state || 'unknown';
+}
+
+// Crea la instancia si no existe, apunta su webhook a la tienda y devuelve el QR.
+export async function setupInstance(siteUrl) {
+  if ((await connectionState()) === 'missing') {
+    const created = await evolution('POST', '/instance/create', {
+      instanceName: process.env.EVOLUTION_INSTANCE,
+      integration: 'WHATSAPP-BAILEYS',
+      qrcode: true,
+    });
+    if (!created.ok) throw new Error(`No se pudo crear la instancia (${created.status})`);
+  }
+
+  const hook = await evolution('POST', `/webhook/set/${instanceName()}`, {
+    webhook: {
+      enabled: true,
+      url: `${siteUrl.replace(/\/$/, '')}/api/whatsapp`,
+      headers: { 'x-webhook-token': process.env.WHATSAPP_WEBHOOK_SECRET },
+      byEvents: false,
+      base64: false,
+      events: ['MESSAGES_UPSERT'],
+    },
+  });
+  if (!hook.ok) throw new Error(`No se pudo configurar el webhook (${hook.status})`);
+
+  const state = await connectionState();
+  if (state === 'open') return { state };
+  const connect = await evolution('GET', `/instance/connect/${instanceName()}`);
+  if (!connect.ok) throw new Error(`No se pudo generar el QR (${connect.status})`);
+  return { state, qr: connect.data?.base64 || null, pairingCode: connect.data?.pairingCode || null };
+}
+
+export async function logoutInstance() {
+  const result = await evolution('DELETE', `/instance/logout/${instanceName()}`);
+  if (!result.ok && result.status !== 404) throw new Error(`Evolution API ${result.status}`);
 }

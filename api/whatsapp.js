@@ -86,7 +86,7 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Método no permitido.' });
   }
-  if (!webhookAuthorized(req.query?.token)) {
+  if (!webhookAuthorized(req.headers['x-webhook-token'] || req.query?.token)) {
     console.warn('whatsapp webhook rechazado', clientIp(req));
     return res.status(401).json({ error: 'No autorizado.' });
   }

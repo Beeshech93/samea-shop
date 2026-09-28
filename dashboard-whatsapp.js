@@ -159,12 +159,89 @@ document.getElementById('waRefresh').addEventListener('click', async () => {
   if (waSelected) openWaConversation(waSelected);
 });
 
+// ---------- Conexión del número ----------
+
+const WA_STATES = {
+  open: ['Conectado', 'status-ok'],
+  connecting: ['Esperando escaneo', 'status-progress'],
+  close: ['Desconectado', 'status-warn'],
+  missing: ['Sin instancia', 'status-warn'],
+  not_configured: ['Sin configurar en Vercel', 'status-warn'],
+  unreachable: ['Servidor de Evolution sin respuesta', 'status-warn'],
+};
+let waQrTimer = null;
+
+function renderWaConnection(state) {
+  const [label, className] = WA_STATES[state] || [state, ''];
+  const badge = document.getElementById('waConnState');
+  badge.textContent = label;
+  badge.className = `status ${className}`;
+  const connected = state === 'open';
+  document.getElementById('waConnect').classList.toggle('hidden', connected || state === 'not_configured');
+  document.getElementById('waLogout').classList.toggle('hidden', !connected);
+  if (connected) {
+    document.getElementById('waQr').classList.add('hidden');
+    clearInterval(waQrTimer);
+  }
+}
+
+async function loadWaConnection() {
+  const { state } = await adminRequest('GET', null, '/api/admin/whatsapp?view=connection');
+  renderWaConnection(state);
+  return state;
+}
+
+document.getElementById('waConnect').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = 'Preparando…';
+  try {
+    const result = await adminRequest('POST', { action: 'connect' }, '/api/admin/whatsapp');
+    renderWaConnection(result.state);
+    if (result.state !== 'open') {
+      const box = document.getElementById('waQr');
+      box.classList.toggle('hidden', !result.qr);
+      if (result.qr) document.getElementById('waQrImg').src = result.qr;
+      document.getElementById('waPairing').textContent = result.pairingCode ? `O usa el código de vinculación: ${result.pairingCode}` : '';
+      showToast('Webhook configurado. Escanea el QR con el WhatsApp de la tienda.');
+      clearInterval(waQrTimer);
+      waQrTimer = setInterval(async () => {
+        try {
+          if ((await loadWaConnection()) === 'open') showToast('¡WhatsApp conectado! El asistente ya responde.');
+        } catch {
+          // Se reintenta en el siguiente ciclo.
+        }
+      }, 5000);
+      setTimeout(() => clearInterval(waQrTimer), 3 * 60 * 1000);
+    } else {
+      showToast('WhatsApp ya estaba conectado. Webhook actualizado.');
+    }
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Conectar WhatsApp';
+  }
+});
+
+document.getElementById('waLogout').addEventListener('click', async () => {
+  if (!confirm('¿Desconectar el WhatsApp de la tienda? El asistente dejará de responder hasta que vuelvas a escanear el QR.')) return;
+  try {
+    const { state } = await adminRequest('POST', { action: 'logout' }, '/api/admin/whatsapp');
+    renderWaConnection(state);
+    showToast('WhatsApp desconectado.');
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
 // Llamada desde dashboard.js al iniciar sesión; refresca la lista cada 30 s.
 async function loadWhatsappAdmin() {
   const data = await adminRequest('GET', null, '/api/admin/whatsapp');
   waConversations = data.conversations;
   renderWaStatus(data.status);
   renderWaList();
+  loadWaConnection().catch(() => renderWaConnection('unreachable'));
   clearInterval(waTimer);
   waTimer = setInterval(() => {
     if (!document.hidden && adminUser) loadWhatsappAdmin().catch(() => {});
