@@ -8,9 +8,9 @@ import {
 } from './_whatsapp.js';
 import { runAgent } from './_agent.js';
 
-const MEDIA_REPLY = 'Ay, por aquí no me abren los audios ni archivos 🙈\n\n¿Me lo escribes, porfa? Así te ayudo más rápido.';
-const HANDOFF_REPLY = 'Déjame pasarte con alguien del equipo para que te ayude mejor.\n\nTe escriben por aquí mismo en cuanto puedan 💕';
-const ERROR_REPLY = 'Perdón, se me complicó algo por aquí 😅\n\nAlguien del equipo te escribe en un ratito.';
+const MEDIA_REPLY = 'Ay, por aquí no me abren los audios ni archivos.\n\n¿Me lo escribes, porfa? Así te ayudo más rápido.';
+const HANDOFF_REPLY = 'Déjame pasarte con alguien del equipo para que te ayude mejor.\n\nTe escriben por aquí mismo en cuanto puedan.';
+const ERROR_REPLY = 'Perdón, se me complicó algo por aquí.\n\nAlguien del equipo te escribe en un ratito.';
 
 // Tiempo que se espera por si la clienta manda varios mensajes seguidos.
 const GATHER_MS = 5000;
@@ -43,7 +43,7 @@ async function notifyOwner(conversation, reason) {
   const owner = process.env.WHATSAPP_OWNER_NUMBER;
   if (!owner) return;
   try {
-    await sendWhatsappText(owner, `🔔 SAMÉA: ${conversation.name || conversation.phone || 'Una clienta'} necesita atención.\nMotivo: ${reason}\nResponde desde el panel: ${(process.env.SITE_URL || 'https://samea.shop')}/dashboard#whatsapp`);
+    await sendWhatsappText(owner, `SAMÉA: ${conversation.name || conversation.phone || 'Una clienta'} necesita atención.\nMotivo: ${reason}\nResponde desde el panel: ${(process.env.SITE_URL || 'https://samea.shop')}/dashboard#whatsapp`);
   } catch (error) {
     console.error('owner notify error', error.message);
   }

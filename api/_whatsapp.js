@@ -342,10 +342,20 @@ export async function logoutInstance() {
   if (!result.ok && result.status !== 404) throw new Error(`Evolution API ${result.status}`);
 }
 
+// Quita emojis (la tienda escribe sin emojis) y deja el texto limpio.
+export function stripEmoji(text) {
+  return String(text || '')
+    .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F\u20E3]/gu, '')
+    .replace(/[ \t]+([.,!?;:])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
+}
+
 // Parte la respuesta en burbujas cortas, como escribe una persona: separa por
 // párrafos (línea en blanco) y junta lo que sobre para no mandar más de 4.
 export function splitIntoBubbles(text, max = 4) {
-  const parts = String(text || '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+  const parts = stripEmoji(text).split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
   if (parts.length <= max) return parts;
   return [...parts.slice(0, max - 1), parts.slice(max - 1).join('\n\n')];
 }

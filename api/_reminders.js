@@ -47,12 +47,12 @@ export function cartLinkFromItems(items = [], promoCode = null) {
 }
 
 export function reminderText(kind, data) {
-  const hi = data.name ? `Hola ${data.name} 😊` : 'Hola 😊';
+  const hi = data.name ? `Hola, ${data.name}.` : 'Hola.';
   if (kind === 'card') {
     return `${hi} Soy Sam, de SAMÉA.\n\nVi que te quedaste a nada de terminar tu compra (${data.summary}). ¿Tuviste algún problema con el pago?\n\nTe dejo tu carrito listo por si quieres retomarlo: ${data.link}\n\nSi tienes alguna duda de talla o envío, aquí estoy.`;
   }
   if (kind === 'transfer') {
-    return `${hi} Soy Sam, de SAMÉA.\n\nTu pedido *${data.code}* sigue apartado esperando tu transferencia de *${data.total}*.${data.bank ? `\n\nTe dejo los datos:\n${data.bank}\nConcepto: ${data.code}` : ''}\n\nEn cuanto la veamos lo preparamos. Si ya la hiciste, mándame tu comprobante por aquí o avísame 💕`;
+    return `${hi} Soy Sam, de SAMÉA.\n\nTu pedido *${data.code}* sigue apartado esperando tu transferencia de *${data.total}*.${data.bank ? `\n\nTe dejo los datos:\n${data.bank}\nConcepto: ${data.code}` : ''}\n\nEn cuanto la veamos lo preparamos. Si ya la hiciste, mándame tu comprobante por aquí o avísame.`;
   }
   return `${hi}\n\n¿Pudiste ver lo que te mandé? Tu carrito sigue listo aquí: ${data.link}\n\nSi quieres cambiar talla o tienes cualquier duda, me dices y lo ajustamos.`;
 }

@@ -27,7 +27,7 @@ const { splitIntoBubbles, typingDelay } = await import('../api/_whatsapp.js');
 const { conversationContext } = await import('../api/_agent.js');
 
 test('parte la respuesta en burbujas cortas', () => {
-  assert.deepEqual(splitIntoBubbles('Hola 😊\n\n¿Qué talla usas?'), ['Hola 😊', '¿Qué talla usas?']);
+  assert.deepEqual(splitIntoBubbles('Hola\n\n¿Qué talla usas?'), ['Hola', '¿Qué talla usas?']);
   assert.equal(splitIntoBubbles('a\n\nb\n\nc\n\nd\n\ne\n\nf').length, 4);
   assert.deepEqual(splitIntoBubbles(''), []);
 });
@@ -82,4 +82,13 @@ test('normaliza el número de atención', () => {
   assert.equal(normalizeSupportNumber('+1 (305) 555-0100'), '13055550100');
   assert.equal(normalizeSupportNumber(''), '');
   assert.equal(normalizeSupportNumber('123'), null);
+});
+
+const { stripEmoji } = await import('../api/_whatsapp.js');
+
+test('las respuestas se envían sin emojis', () => {
+  assert.equal(stripEmoji('Hola 😊 ¿qué talla usas? 💕✨'), 'Hola ¿qué talla usas?');
+  assert.equal(stripEmoji('Listo 👍🏽.'), 'Listo.');
+  assert.equal(stripEmoji('*Bralette* · $499 MXN\nTallas: CH, M'), '*Bralette* · $499 MXN\nTallas: CH, M');
+  assert.deepEqual(splitIntoBubbles('Hola 😊\n\n🎉'), ['Hola']);
 });
