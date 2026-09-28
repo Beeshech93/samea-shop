@@ -93,6 +93,7 @@ export function ensureLogisticsSchema() {
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_method TEXT`;
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS oxxo_voucher_url TEXT`;
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS oxxo_expires_at TIMESTAMPTZ`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ`;
     await sql`CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status, created_at DESC)`;
     await sql`CREATE INDEX IF NOT EXISTS orders_user_idx ON orders (user_id, created_at DESC)`;
     await sql`

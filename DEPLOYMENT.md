@@ -67,3 +67,14 @@ Los dos valores funcionan; los recomendados quitan el aviso "DNS Change Recommen
 Funcionamiento: el bot responde solo a chats individuales de texto; las herramientas del agente son de solo lectura (productos, envíos, promociones, pagos y estado de pedidos verificado por correo o por el número de WhatsApp de la compra). Pasa a una persona cuando lo pide la clienta o hay quejas; también se pausa si alguien del equipo responde desde el teléfono o desde el panel (sección WhatsApp). Límite: 30 mensajes por hora por chat.
 
 Evolution API usa la conexión de WhatsApp Web (no la API oficial de Meta): WhatsApp puede restringir números que envían mensajes masivos o no solicitados. Úsalo solo para responder a quien te escribe.
+
+## Recordatorios de compras sin terminar (WhatsApp)
+
+Sam escribe **un solo mensaje** (de 9:00 a 21:00, hora de México) cuando:
+- un pago con tarjeta se abandona (después de 1 hora): libera el apartado y manda el carrito listo para retomarlo;
+- una transferencia sigue sin pagarse después de 12 horas: recuerda el pedido y los datos bancarios;
+- un enlace de compra que Sam mandó no se usó en 3 horas.
+
+No se escribe si la clienta ya compró después, si alguien del equipo atiende su chat o si WhatsApp no está conectado.
+Se revisa con las visitas a la tienda (máx. cada 10 min) y con un cron diario de Vercel (`/api/orders/reminders`).
+Opcional: `CRON_SECRET` en Vercel protege esa ruta. Se activa o desactiva en el panel → WhatsApp.

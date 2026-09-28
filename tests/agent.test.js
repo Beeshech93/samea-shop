@@ -44,3 +44,32 @@ test('contexto con hora de México y nombre limpio', () => {
   assert.match(text, /"Ana script"/);
   assert.doesNotMatch(conversationContext({}), /Nombre/);
 });
+
+process.env.EVOLUTION_API_URL ||= '';
+const { phoneToJid, cartLinkFromItems, withinSendingHours, reminderText } = await import('../api/_reminders.js');
+
+test('convierte teléfonos de México en chats de WhatsApp', () => {
+  assert.equal(phoneToJid('55 1234 5678'), '525512345678@s.whatsapp.net');
+  assert.equal(phoneToJid('+52 1 55 1234 5678'), '525512345678@s.whatsapp.net');
+  assert.equal(phoneToJid('+52 55 1234 5678'), '525512345678@s.whatsapp.net');
+  assert.equal(phoneToJid('123'), null);
+});
+
+test('rehace el enlace del carrito desde el pedido', () => {
+  const link = cartLinkFromItems([{ productId: 3, size: '34B', quantity: 2 }, { productId: 7, size: null, quantity: 1 }], 'APP10');
+  const url = new URL(link);
+  assert.equal(url.searchParams.get('carrito'), '3:34B:2,7::1');
+  assert.equal(url.searchParams.get('codigo'), 'APP10');
+});
+
+test('solo envía en horario de 9 a 21 en México', () => {
+  assert.equal(withinSendingHours(new Date('2026-09-28T17:00:00Z')), true); // 11:00
+  assert.equal(withinSendingHours(new Date('2026-09-28T05:00:00Z')), false); // 23:00
+});
+
+test('mensajes de recordatorio', () => {
+  assert.match(reminderText('card', { name: 'Ana', summary: 'Bralette', link: 'https://samea.shop/?carrito=1::1' }), /carrito=1::1/);
+  const transfer = reminderText('transfer', { name: '', code: 'SAM-1001', total: '$500.00', bank: 'BBVA 123' });
+  assert.match(transfer, /SAM-1001/);
+  assert.match(transfer, /BBVA 123/);
+});

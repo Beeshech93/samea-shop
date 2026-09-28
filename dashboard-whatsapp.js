@@ -27,7 +27,20 @@ function renderWaStatus(status) {
     ? `Falta configurar en Vercel: ${missing.join(', ')}.`
     : `Asistente activo.${status.ownerNumber ? ' Recibirás un aviso por WhatsApp cuando una clienta necesite a una persona.' : ''}`;
   note.classList.toggle('low', missing.length > 0);
+  document.getElementById('waReminders').checked = status.reminders !== false;
 }
+
+document.getElementById('waReminders').addEventListener('change', async (event) => {
+  const input = event.target;
+  try {
+    const { reminders } = await adminRequest('POST', { action: 'reminders', enabled: input.checked }, '/api/admin/whatsapp');
+    input.checked = reminders;
+    showToast(reminders ? 'Recordatorios activados' : 'Recordatorios desactivados');
+  } catch (error) {
+    input.checked = !input.checked;
+    showToast(error.message);
+  }
+});
 
 function renderWaList() {
   waList.innerHTML = '';

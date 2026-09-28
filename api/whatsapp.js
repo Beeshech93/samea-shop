@@ -128,6 +128,7 @@ export default async function handler(req, res) {
     if (!rowId) return res.status(200).json({ ok: true, duplicate: true });
 
     waitUntil(handleCustomerMessage(message, rowId));
+    waitUntil(import('./_reminders.js').then((m) => m.runCartReminders()).catch((error) => console.error('reminders error', error.message)));
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.error('whatsapp webhook error', error);

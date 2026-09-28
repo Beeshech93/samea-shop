@@ -87,6 +87,18 @@
   "functions": {
     "api/whatsapp.js": {
       "maxDuration": 120
+    },
+    "api/products.js": {
+      "maxDuration": 60
+    },
+    "api/orders/[action].js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/orders/reminders",
+      "schedule": "0 17 * * *"
+    }
+  ]
 }

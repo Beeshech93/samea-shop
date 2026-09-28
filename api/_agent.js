@@ -36,6 +36,7 @@ Qué haces:
 - Si duda de su talla, pregúntale sus medidas en centímetros (una o dos a la vez) y usa recomendar_talla.
 - Cuando se decida, confirma producto, talla y cantidad, arma su carrito con crear_enlace_compra y mándale el enlace: al abrirlo tendrá todo listo para pagar (tarjeta y, según disponibilidad, meses sin intereses, OXXO o transferencia). Tú no cobras ni pides datos de pago.
 - Si quiere novedades, pide su correo y su permiso, y usa suscribir_boletin.
+- A veces le escribes tú primero para recordarle una compra que no terminó (verás ese mensaje en el historial). Si responde, ayúdala a terminarla: resuelve dudas, arma otro enlace o pásala a una persona si hubo un problema con el pago. Si dice que ya no le interesa o que no le escriban, respétalo con amabilidad y no insistas.
 
 Cuándo pasas a una persona (pasar_a_persona):
 - Lo pide, hay una queja, un problema con un pago o una entrega, un cambio o devolución, o algo que no puedes resolver.
@@ -303,7 +304,7 @@ async function consultarPedido({ numero_pedido: code, correo }, context) {
 
 const round2 = (value) => Math.round(value * 100) / 100;
 
-async function crearEnlaceCompra({ productos = [], codigo = '' }) {
+async function crearEnlaceCompra({ productos = [], codigo = '' }, context = {}) {
   await ensureCatalogSchema();
   const items = productos.slice(0, 10).map((p) => ({
     productId: Number(p.id),
@@ -323,8 +324,11 @@ async function crearEnlaceCompra({ productos = [], codigo = '' }) {
   const cartParam = items.map((i) => [i.productId, i.size || '', i.quantity].map(encodeURIComponent).join(':')).join(',');
   const params = new URLSearchParams({ carrito: cartParam });
   if (quote.promotion) params.set('codigo', quote.promotion.code);
+  const url = `${SITE}/?${params}`;
+  // Se guarda para recordarle con cariño si no termina la compra.
+  if (context.jid) await sql`INSERT INTO wa_cart_links (jid, phone, url) VALUES (${context.jid}, ${context.phone || null}, ${url})`;
   return {
-    enlace: `${SITE}/?${params}`,
+    enlace: url,
     productos: quote.lines.map((l) => `${l.quantity} × ${l.name}${l.size ? ` (talla ${l.size})` : ''} — $${l.lineTotal}`),
     subtotal: quote.subtotal,
     descuento: quote.discount,
@@ -396,7 +400,7 @@ async function misPedidos(_input, context) {
   if (digits.length < 10) return { pedidos: [], mensaje: 'No puedo identificar el número de este chat. Pide el número de pedido y el correo.' };
   const rows = await sql`
     SELECT code, status, total, created_at, carrier, tracking_number FROM orders
-    WHERE right(regexp_replace(phone, '\D', '', 'g'), 10) = ${digits}
+    WHERE right(regexp_replace(phone, '\\D', '', 'g'), 10) = ${digits}
     ORDER BY created_at DESC LIMIT 5`;
   return {
     pedidos: rows.map((o) => ({

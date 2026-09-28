@@ -4,6 +4,8 @@ import {
   agentConfigured, connectionState, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
   sendWhatsappText, setMode, setOutgoingId, setupInstance,
 } from '../../_whatsapp.js';
+import { ensureLogisticsSchema, setSetting } from '../../_logistics.js';
+import { remindersEnabled } from '../../_reminders.js';
 
 const validJid = (value) => typeof value === 'string' && /^[0-9A-Za-z._:-]+@(s\.whatsapp\.net|lid)$/.test(value);
 
@@ -22,6 +24,11 @@ export default async function handler(req, res) {
         console.error('evolution state error', error.message);
         return res.status(200).json({ state: 'unreachable' });
       }
+    }
+    if (req.method === 'POST' && req.body?.action === 'reminders') {
+      await ensureLogisticsSchema();
+      await setSetting('wa_cart_reminders', req.body.enabled ? '1' : '0');
+      return res.status(200).json({ reminders: await remindersEnabled() });
     }
     if (req.method === 'POST' && ['connect', 'logout'].includes(req.body?.action)) {
       if (process.env.EVOLUTION_API_URL && !evolutionBaseUrl()) {
@@ -64,6 +71,7 @@ export default async function handler(req, res) {
           anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
           webhookSecret: Boolean(process.env.WHATSAPP_WEBHOOK_SECRET),
           ownerNumber: Boolean(process.env.WHATSAPP_OWNER_NUMBER),
+          reminders: await ensureLogisticsSchema().then(remindersEnabled),
         },
       });
     }

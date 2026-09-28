@@ -50,6 +50,15 @@ export function ensureWhatsappSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`;
     await sql`CREATE INDEX IF NOT EXISTS wa_messages_jid_idx ON wa_messages (jid, created_at DESC)`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS wa_cart_links (
+        id BIGSERIAL PRIMARY KEY,
+        jid TEXT NOT NULL REFERENCES wa_conversations(jid) ON DELETE CASCADE,
+        phone TEXT,
+        url TEXT NOT NULL,
+        reminded_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )`;
   })().catch((error) => {
     whatsappReady = undefined;
     throw error;

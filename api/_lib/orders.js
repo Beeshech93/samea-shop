@@ -218,7 +218,16 @@ export async function mine(req, res) {
   return res.status(200).json({ orders: rows.map((order) => publicOrder(order)) });
 }
 
-export const routes = { options, quote, create, track, abandon, mine };
+// Cron diario de Vercel (respaldo): recordatorios de compras sin terminar.
+export async function reminders(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Método no permitido.' });
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'No autorizado.' });
+  const { runCartReminders } = await import('../_reminders.js');
+  return res.status(200).json(await runCartReminders());
+}
+
+export const routes = { options, quote, create, track, abandon, mine, reminders };
 
 export async function handle(req, res) {
   const route = Object.hasOwn(routes, req.query?.action) ? routes[req.query.action] : null;
