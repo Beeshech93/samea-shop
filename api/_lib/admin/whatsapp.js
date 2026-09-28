@@ -24,10 +24,14 @@ export default async function handler(req, res) {
         if (state === 'open') {
           await ensureLogisticsSchema();
           if (!(await getSetting('support_whatsapp'))) {
-            const number = await connectedNumber().catch(() => null);
+            const number = await connectedNumber().catch((error) => {
+              console.error('evolution owner error', error.message);
+              return null;
+            });
             if (number) await setSetting('support_whatsapp', number);
           }
         }
+        console.log('whatsapp connection state', state);
         return res.status(200).json({ state });
       } catch (error) {
         console.error('evolution state error', error.message);

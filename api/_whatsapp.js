@@ -298,14 +298,24 @@ export async function setupInstance(siteUrl) {
 export async function connectedNumber() {
   const result = await evolution('GET', `/instance/fetchInstances?instanceName=${instanceName()}`);
   if (!result.ok) return null;
-  const list = Array.isArray(result.data) ? result.data : [result.data];
-  const item = list.find(Boolean) || {};
-  const jid = item.ownerJid || item.instance?.owner || item.owner || '';
+  const list = (Array.isArray(result.data) ? result.data : [result.data]).filter(Boolean);
+  const wanted = process.env.EVOLUTION_INSTANCE;
+  const item = list.find((i) => i.name === wanted || i.instanceName === wanted || i.instance?.instanceName === wanted) || list[0] || {};
+  const jid = item.ownerJid || item.instance?.owner || item.owner || item.instance?.ownerJid || '';
+  if (!jid) console.warn('evolution owner not found', JSON.stringify(item).slice(0, 300));
   const digits = String(jid).split('@')[0].replace(/\D/g, '');
   return digits.length >= 10 && digits.length <= 15 ? digits : null;
 }
 
 // Número de atención que se muestra en la tienda (ajuste del panel).
+// El webhook de Evolution trae en "sender" el número de la tienda: si aún no
+// hay número de atención guardado, se toma de ahí.
+export async function rememberStoreNumber(sender) {
+  const digits = String(sender || '').split('@')[0].replace(/\D/g, '');
+  if (digits.length < 10 || digits.length > 15 || !String(sender).endsWith('@s.whatsapp.net')) return;
+  await sql`INSERT INTO settings (key, value) VALUES ('support_whatsapp', ${digits}) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value WHERE settings.value = ''`;
+}
+
 export function normalizeSupportNumber(value) {
   const digits = String(value || '').replace(/\D/g, '');
   if (!digits) return '';

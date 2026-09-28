@@ -2,7 +2,7 @@ import { waitUntil } from '@vercel/functions';
 import { ensureUsersSchema, sql } from './_db.js';
 import { clientIp, isLimited, recordAttempt } from './_ratelimit.js';
 import {
-  agentConfigured, ensureWhatsappSchema, isOwnEcho, isOwnerChat, markAsRead, newerCustomerMessage, parseIncoming, recentMessages,
+  agentConfigured, ensureWhatsappSchema, rememberStoreNumber, isOwnEcho, isOwnerChat, markAsRead, newerCustomerMessage, parseIncoming, recentMessages,
   recordOutgoing, sendWhatsappText, setMode, setOutgoingId, showTyping, splitIntoBubbles, storeMessage, typingDelay,
   upsertConversation, webhookAuthorized,
 } from './_whatsapp.js';
@@ -116,6 +116,7 @@ export default async function handler(req, res) {
     if (!message || (!message.text && !message.media) || isOwnerChat(message)) return res.status(200).json({ ok: true, ignored: true });
 
     await Promise.all([ensureUsersSchema(), ensureWhatsappSchema()]);
+    await rememberStoreNumber(req.body?.sender).catch((error) => console.error('store number error', error.message));
 
     if (message.fromMe) {
       await upsertConversation({ ...message, name: '' });
