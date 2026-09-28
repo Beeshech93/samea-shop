@@ -109,16 +109,48 @@ export function parseIncoming(payload) {
 }
 
 // Envía un texto por Evolution API y devuelve el id del mensaje de WhatsApp.
-export async function sendWhatsappText(jid, text) {
+// Con typingMs, WhatsApp muestra "escribiendo…" ese tiempo antes del mensaje.
+export async function sendWhatsappText(jid, text, typingMs = 0) {
   const base = evolutionBaseUrl();
+  const body = { number: jid, text: String(text).slice(0, 4000) };
+  if (typingMs > 0) body.delay = Math.round(typingMs);
   const response = await fetch(`${base}/message/sendText/${encodeURIComponent(process.env.EVOLUTION_INSTANCE)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
-    body: JSON.stringify({ number: jid, text: String(text).slice(0, 4000) }),
+    body: JSON.stringify(body),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`Evolution API ${response.status}: ${JSON.stringify(data).slice(0, 200)}`);
   return data?.key?.id ? String(data.key.id) : null;
+}
+
+// Palomitas azules: marca como leído el mensaje de la clienta (mejor esfuerzo).
+export async function markAsRead(jid, messageId) {
+  if (!messageId) return;
+  try {
+    await fetch(`${evolutionBaseUrl()}/chat/markMessageAsRead/${encodeURIComponent(process.env.EVOLUTION_INSTANCE)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
+      body: JSON.stringify({ readMessages: [{ remoteJid: jid, fromMe: false, id: messageId }] }),
+    });
+  } catch (error) {
+    console.error('whatsapp mark read error', error.message);
+  }
+}
+
+// Muestra "escribiendo…" en el chat durante delayMs (mejor esfuerzo, no bloquea).
+export function showTyping(jid, delayMs = 8000) {
+  fetch(`${evolutionBaseUrl()}/chat/sendPresence/${encodeURIComponent(process.env.EVOLUTION_INSTANCE)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
+    body: JSON.stringify({ number: jid, presence: 'composing', delay: Math.round(delayMs) }),
+  }).catch((error) => console.error('whatsapp presence error', error.message));
+}
+
+// ¿Llegó otro mensaje de la clienta después de este? (para contestar todo junto)
+export async function newerCustomerMessage(jid, rowId) {
+  const rows = await sql`SELECT 1 FROM wa_messages WHERE jid = ${jid} AND role = 'customer' AND id > ${rowId} LIMIT 1`;
+  return rows.length > 0;
 }
 
 // Chat del número de la dueña (avisos del bot): no es una clienta.
@@ -155,7 +187,7 @@ export async function upsertConversation({ jid, phone, name }) {
       name = CASE WHEN EXCLUDED.name <> '' THEN EXCLUDED.name ELSE wa_conversations.name END`;
 }
 
-// Guarda un mensaje; devuelve false si ya existía (WhatsApp puede reenviar eventos).
+// Guarda un mensaje y devuelve su id; false si ya existía (WhatsApp puede reenviar eventos).
 export async function storeMessage(jid, role, content, waMessageId = null) {
   const rows = await sql`
     INSERT INTO wa_messages (jid, role, content, wa_message_id) VALUES (${jid}, ${role}, ${content}, ${waMessageId})
@@ -165,7 +197,7 @@ export async function storeMessage(jid, role, content, waMessageId = null) {
     UPDATE wa_conversations SET last_message_at = now(),
       unread = CASE WHEN ${role} = 'customer' THEN unread + 1 ELSE unread END
     WHERE jid = ${jid}`;
-  return true;
+  return rows[0].id;
 }
 
 export async function recentMessages(jid, limit = 20) {
@@ -256,4 +288,17 @@ export async function setupInstance(siteUrl) {
 export async function logoutInstance() {
   const result = await evolution('DELETE', `/instance/logout/${instanceName()}`);
   if (!result.ok && result.status !== 404) throw new Error(`Evolution API ${result.status}`);
+}
+
+// Parte la respuesta en burbujas cortas, como escribe una persona: separa por
+// párrafos (línea en blanco) y junta lo que sobre para no mandar más de 4.
+export function splitIntoBubbles(text, max = 4) {
+  const parts = String(text || '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length <= max) return parts;
+  return [...parts.slice(0, max - 1), parts.slice(max - 1).join('\n\n')];
+}
+
+// Tiempo de "escribiendo…" según el largo del mensaje (≈ 35 letras por segundo).
+export function typingDelay(text) {
+  return Math.min(4500, Math.max(1200, String(text || '').length * 28));
 }
