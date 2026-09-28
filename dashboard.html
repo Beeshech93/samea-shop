@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=15" />
+  <link rel="stylesheet" href="styles.css?v=16" />
 </head>
 <body class="is-locked">
   <div class="admin">
@@ -152,6 +152,13 @@
             <input type="checkbox" id="waReminders" />
             <span>Recordar por WhatsApp las compras sin terminar (un solo mensaje, de 9:00 a 21:00)</span>
           </label>
+          <form class="wa-support-form" id="waSupportForm">
+            <label class="form-field">
+              <span>Número de atención que ven las clientas en la tienda</span>
+              <input type="tel" id="waSupportNumber" placeholder="Se toma del WhatsApp conectado" maxlength="20" />
+            </label>
+            <button class="btn btn-ghost btn-small" type="submit">Guardar número</button>
+          </form>
           <div class="wa-connection" id="waConnection">
             <div>
               <strong>Número de WhatsApp</strong>
@@ -533,6 +540,6 @@
   <script src="dashboard.js?v=8"></script>
   <script src="dashboard-catalog.js?v=2"></script>
   <script src="dashboard-orders.js?v=3"></script>
-  <script src="dashboard-whatsapp.js?v=5"></script>
+  <script src="dashboard-whatsapp.js?v=6"></script>
 </body>
 </html>

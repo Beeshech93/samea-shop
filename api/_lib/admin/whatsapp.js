@@ -1,10 +1,10 @@
 import { sql } from '../../_db.js';
 import { requireAdmin } from '../../_admin.js';
 import {
-  agentConfigured, connectionState, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
+  agentConfigured, connectedNumber, connectionState, normalizeSupportNumber, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
   sendWhatsappText, setMode, setOutgoingId, setupInstance,
 } from '../../_whatsapp.js';
-import { ensureLogisticsSchema, setSetting } from '../../_logistics.js';
+import { ensureLogisticsSchema, getSetting, setSetting } from '../../_logistics.js';
 import { remindersEnabled } from '../../_reminders.js';
 
 const validJid = (value) => typeof value === 'string' && /^[0-9A-Za-z._:-]+@(s\.whatsapp\.net|lid)$/.test(value);
@@ -19,11 +19,27 @@ export default async function handler(req, res) {
       if (process.env.EVOLUTION_API_URL && !evolutionBaseUrl()) return res.status(200).json({ state: 'invalid_url' });
       if (!evolutionConfigured()) return res.status(200).json({ state: 'not_configured' });
       try {
-        return res.status(200).json({ state: await connectionState() });
+        const state = await connectionState();
+        // Al conectar, el número vinculado pasa a ser el de atención en la tienda.
+        if (state === 'open') {
+          await ensureLogisticsSchema();
+          if (!(await getSetting('support_whatsapp'))) {
+            const number = await connectedNumber().catch(() => null);
+            if (number) await setSetting('support_whatsapp', number);
+          }
+        }
+        return res.status(200).json({ state });
       } catch (error) {
         console.error('evolution state error', error.message);
         return res.status(200).json({ state: 'unreachable' });
       }
+    }
+    if (req.method === 'POST' && req.body?.action === 'support') {
+      const number = normalizeSupportNumber(req.body.number);
+      if (number === null) return res.status(400).json({ error: 'Escribe un número válido, p. ej. 55 1234 5678 o +52 55 1234 5678.' });
+      await ensureLogisticsSchema();
+      await setSetting('support_whatsapp', number);
+      return res.status(200).json({ supportNumber: number });
     }
     if (req.method === 'POST' && req.body?.action === 'reminders') {
       await ensureLogisticsSchema();
@@ -72,6 +88,7 @@ export default async function handler(req, res) {
           webhookSecret: Boolean(process.env.WHATSAPP_WEBHOOK_SECRET),
           ownerNumber: Boolean(process.env.WHATSAPP_OWNER_NUMBER),
           reminders: await ensureLogisticsSchema().then(remindersEnabled),
+          supportNumber: await getSetting('support_whatsapp'),
         },
       });
     }

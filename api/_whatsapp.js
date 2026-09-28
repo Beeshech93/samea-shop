@@ -294,6 +294,26 @@ export async function setupInstance(siteUrl) {
   return { state, qr: connect.data?.base64 || null, pairingCode: connect.data?.pairingCode || null };
 }
 
+// Número de WhatsApp vinculado a la instancia (solo dígitos), o null.
+export async function connectedNumber() {
+  const result = await evolution('GET', `/instance/fetchInstances?instanceName=${instanceName()}`);
+  if (!result.ok) return null;
+  const list = Array.isArray(result.data) ? result.data : [result.data];
+  const item = list.find(Boolean) || {};
+  const jid = item.ownerJid || item.instance?.owner || item.owner || '';
+  const digits = String(jid).split('@')[0].replace(/\D/g, '');
+  return digits.length >= 10 && digits.length <= 15 ? digits : null;
+}
+
+// Número de atención que se muestra en la tienda (ajuste del panel).
+export function normalizeSupportNumber(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.length === 10) return `52${digits}`;
+  if (digits.length === 13 && digits.startsWith('521')) return `52${digits.slice(3)}`;
+  return digits.length >= 11 && digits.length <= 15 ? digits : null;
+}
+
 export async function logoutInstance() {
   const result = await evolution('DELETE', `/instance/logout/${instanceName()}`);
   if (!result.ok && result.status !== 404) throw new Error(`Evolution API ${result.status}`);

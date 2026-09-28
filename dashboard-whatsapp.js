@@ -28,7 +28,21 @@ function renderWaStatus(status) {
     : `Asistente activo.${status.ownerNumber ? ' Recibirás un aviso por WhatsApp cuando una clienta necesite a una persona.' : ''}`;
   note.classList.toggle('low', missing.length > 0);
   document.getElementById('waReminders').checked = status.reminders !== false;
+  const supportInput = document.getElementById('waSupportNumber');
+  if (document.activeElement !== supportInput) supportInput.value = status.supportNumber ? `+${status.supportNumber}` : '';
 }
+
+document.getElementById('waSupportForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.getElementById('waSupportNumber');
+  try {
+    const { supportNumber } = await adminRequest('POST', { action: 'support', number: input.value }, '/api/admin/whatsapp');
+    input.value = supportNumber ? `+${supportNumber}` : '';
+    showToast(supportNumber ? 'Número de atención guardado' : 'Se usará el número del WhatsApp conectado');
+  } catch (error) {
+    showToast(error.message);
+  }
+});
 
 document.getElementById('waReminders').addEventListener('change', async (event) => {
   const input = event.target;

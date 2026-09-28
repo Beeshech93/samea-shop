@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=16" />
 </head>
 <body>
   <header class="site-header">
@@ -103,7 +103,7 @@
               </span>
             </label>
           </div>
-          <p class="promo-status is-error hidden" id="payUnavailable">Los pagos no están disponibles en este momento. Escríbenos a hola@samea.com.mx.</p>
+          <p class="promo-status is-error hidden" id="payUnavailable">Los pagos no están disponibles en este momento. Escríbenos a hola@samea.com.mx<span data-wa-block hidden> o por <a data-wa-support hidden>WhatsApp <span data-wa-number></span></a></span>.</p>
         </section>
       </div>
 
@@ -122,11 +122,13 @@
         <div class="total-row"><span>Total</span><strong id="sumTotal">—</strong></div>
         <button class="btn btn-primary btn-block" type="submit" id="placeOrder">Confirmar pedido</button>
         <p class="fine-print">Al confirmar aceptas el <a href="/privacidad" target="_blank" rel="noopener">aviso de privacidad</a>. Podemos escribirte por WhatsApp sobre tu pedido.</p>
+        <p class="fine-print" data-wa-block hidden>¿Dudas antes de pagar? <a data-wa-support hidden>Escríbenos por WhatsApp <span data-wa-number></span></a></p>
       </aside>
     </form>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="checkout.js?v=4"></script>
+  <script src="support.js?v=1" defer></script>
 </body>
 </html>

@@ -73,3 +73,13 @@ test('mensajes de recordatorio', () => {
   assert.match(transfer, /SAM-1001/);
   assert.match(transfer, /BBVA 123/);
 });
+
+const { normalizeSupportNumber } = await import('../api/_whatsapp.js');
+
+test('normaliza el número de atención', () => {
+  assert.equal(normalizeSupportNumber('55 1234 5678'), '525512345678');
+  assert.equal(normalizeSupportNumber('+52 1 55 1234 5678'), '525512345678');
+  assert.equal(normalizeSupportNumber('+1 (305) 555-0100'), '13055550100');
+  assert.equal(normalizeSupportNumber(''), '');
+  assert.equal(normalizeSupportNumber('123'), null);
+});

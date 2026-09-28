@@ -1,5 +1,5 @@
 import { escapeHtml, mailConfigured, sendMail } from './_mail.js';
-import { publicOrder } from './_logistics.js';
+import { getSetting, publicOrder } from './_logistics.js';
 
 const SITE_URL = (process.env.SITE_URL || 'https://samea.shop').replace(/\/$/, '');
 const money = (value) => Number(value).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
@@ -55,11 +55,15 @@ ${view.trackingUrl ? button(view.trackingUrl, 'Rastrear envío') : ''}${button(l
     return;
   }
 
+  const whatsapp = await getSetting('support_whatsapp').catch(() => '');
+  const help = whatsapp
+    ? `<p>¿Dudas? Escríbenos por WhatsApp: <a href="https://wa.me/${escapeHtml(whatsapp)}">+${escapeHtml(whatsapp)}</a></p>`
+    : '';
   try {
     await sendMail({
       to: order.email,
       subject,
-      html: `${body}<p>SAMÉA · Lencería fina</p>`,
+      html: `${body}${help}<p>SAMÉA · Lencería fina</p>`,
       text: `${subject}\n\nConsulta tu pedido: ${link}\n\nSAMÉA`,
     });
   } catch (error) {

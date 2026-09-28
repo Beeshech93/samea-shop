@@ -218,6 +218,13 @@ export async function mine(req, res) {
   return res.status(200).json({ orders: rows.map((order) => publicOrder(order)) });
 }
 
+// Datos de contacto públicos (número de WhatsApp de atención).
+export async function contact(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Método no permitido.' });
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
+  return res.status(200).json({ whatsapp: (await getSetting('support_whatsapp')) || null, email: 'hola@samea.com.mx' });
+}
+
 // Cron diario de Vercel (respaldo): recordatorios de compras sin terminar.
 export async function reminders(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Método no permitido.' });
@@ -227,7 +234,7 @@ export async function reminders(req, res) {
   return res.status(200).json(await runCartReminders());
 }
 
-export const routes = { options, quote, create, track, abandon, mine, reminders };
+export const routes = { options, quote, create, track, abandon, mine, reminders, contact };
 
 export async function handle(req, res) {
   const route = Object.hasOwn(routes, req.query?.action) ? routes[req.query.action] : null;
