@@ -21,7 +21,7 @@ function renderWaStatus(status) {
   const missing = [];
   if (!status.evolution) missing.push('Evolution API (EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE)');
   if (!status.webhookSecret) missing.push('WHATSAPP_WEBHOOK_SECRET');
-  if (!status.agent && status.evolution) missing.push('ANTHROPIC_API_KEY');
+  if (!status.anthropic) missing.push('ANTHROPIC_API_KEY');
   note.textContent = missing.length
     ? `Falta configurar en Vercel: ${missing.join(', ')}.`
     : `Asistente activo.${status.ownerNumber ? ' Recibirás un aviso por WhatsApp cuando una clienta necesite a una persona.' : ''}`;

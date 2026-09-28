@@ -56,6 +56,7 @@ export default async function handler(req, res) {
         status: {
           evolution: evolutionConfigured(),
           agent: agentConfigured(),
+          anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
           webhookSecret: Boolean(process.env.WHATSAPP_WEBHOOK_SECRET),
           ownerNumber: Boolean(process.env.WHATSAPP_OWNER_NUMBER),
         },
