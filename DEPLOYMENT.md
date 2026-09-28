@@ -47,3 +47,23 @@ Los dos valores funcionan; los recomendados quitan el aviso "DNS Change Recommen
 - Límites de intentos por IP y correo en login, registro, recuperación, pedidos, comentarios, boletín y búsqueda de pedidos.
 - Cancelar un pedido pagado con Stripe lo reembolsa; si estaba pendiente (enlace de pago o ficha OXXO) lo anula. Un pago que llegue a un pedido ya cancelado se reembolsa solo.
 - `robots.txt` excluye panel, checkout, pedidos y API; contacto de seguridad en `/.well-known/security.txt`.
+
+## Agente de WhatsApp (Evolution API + Claude)
+
+1. **Servidor de Evolution API** (v2): instálalo en un VPS o servicio con Docker (Railway, Render, DigitalOcean…); no corre en Vercel. Crea una instancia y conéctala escaneando el QR con el WhatsApp de SAMÉA.
+2. **Variables en Vercel** (Production) y redeploy:
+
+| Variable | Valor |
+|---|---|
+| `EVOLUTION_API_URL` | URL de tu servidor, p. ej. `https://evolution.midominio.com` |
+| `EVOLUTION_API_KEY` | API key de Evolution |
+| `EVOLUTION_INSTANCE` | Nombre de la instancia |
+| `WHATSAPP_WEBHOOK_SECRET` | Texto aleatorio largo (p. ej. `openssl rand -hex 24`) |
+| `ANTHROPIC_API_KEY` | Clave de https://console.anthropic.com |
+| `WHATSAPP_OWNER_NUMBER` | Opcional: tu número (con lada, p. ej. `5215512345678`) para recibir avisos cuando una clienta pide a una persona |
+
+3. **Webhook en Evolution API** (instancia → Webhook): URL `https://samea.shop/api/whatsapp?token=<WHATSAPP_WEBHOOK_SECRET>`, evento `MESSAGES_UPSERT`, sin «webhook by events».
+
+Funcionamiento: el bot responde solo a chats individuales de texto; las herramientas del agente son de solo lectura (productos, envíos, promociones, pagos y estado de pedidos verificado por correo o por el número de WhatsApp de la compra). Pasa a una persona cuando lo pide la clienta o hay quejas; también se pausa si alguien del equipo responde desde el teléfono o desde el panel (sección WhatsApp). Límite: 30 mensajes por hora por chat.
+
+Evolution API usa la conexión de WhatsApp Web (no la API oficial de Meta): WhatsApp puede restringir números que envían mensajes masivos o no solicitados. Úsalo solo para responder a quien te escribe.

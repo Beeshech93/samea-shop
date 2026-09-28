@@ -21,7 +21,7 @@ Tienda en línea de lencería publicada en Vercel en **https://samea.shop** (tam
 | `index.html`, `script.js`, `styles.css` | Tienda: catálogo, tallas, carrito, códigos promocionales, cuentas, comentarios y boletín |
 | `checkout.html`, `checkout.js` | Checkout: dirección, envío por zona, pago con tarjeta (Stripe) o transferencia |
 | `pedido.html`, `pedido.js` | Seguimiento de pedidos y «Mis pedidos» |
-| `dashboard.html`, `dashboard*.js` | Panel de administración: pedidos, envíos, productos, promociones, clientas, boletín, comentarios |
+| `dashboard.html`, `dashboard*.js` | Panel de administración: WhatsApp, pedidos, envíos, pagos, productos, promociones, clientas, boletín, comentarios |
 | `privacidad.html` | Aviso de privacidad |
 | `api/*.js` | Funciones de Vercel (API). Los archivos que empiezan por `_` son módulos compartidos |
 | `api/_lib/` | Manejadores de `/api/auth/*` y `/api/admin/*` |
@@ -37,6 +37,7 @@ Tienda en línea de lencería publicada en Vercel en **https://samea.shop** (tam
 | `POST /api/newsletter` | Suscripción al boletín |
 | `/api/orders/{options,quote,create,track,abandon,mine}` | Checkout y seguimiento de pedidos |
 | `POST /api/stripe-webhook` | Confirmación de pagos de Stripe |
+| `POST /api/whatsapp?token=…` | Webhook de Evolution API para el agente de WhatsApp |
 | `/api/auth/{register,login,logout,me,forgot,reset}` | Cuentas y sesión (cookie `HttpOnly`) |
 | `/api/admin/{orders,shipping,products,promotions,users,subscribers,comments}` | Gestión desde el panel |
 

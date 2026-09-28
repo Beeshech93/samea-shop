@@ -7,8 +7,9 @@ import subscribers from '../_lib/admin/subscribers.js';
 import orders from '../_lib/admin/orders.js';
 import shipping from '../_lib/admin/shipping.js';
 import payments from '../_lib/admin/payments.js';
+import whatsapp from '../_lib/admin/whatsapp.js';
 
-const routes = { comments, users, products, promotions, subscribers, orders, shipping, payments };
+const routes = { comments, users, products, promotions, subscribers, orders, shipping, payments, whatsapp };
 
 export default function handler(req, res) {
   const route = Object.hasOwn(routes, req.query.resource) ? routes[req.query.resource] : null;

@@ -258,6 +258,7 @@ async function loadProtectedData() {
   const tasks = [loadUsers(), loadSubscribers()];
   if (typeof loadCatalogAdmin === 'function') tasks.push(loadCatalogAdmin());
   if (typeof loadOrdersAdmin === 'function') tasks.push(loadOrdersAdmin());
+  if (typeof loadWhatsappAdmin === 'function') tasks.push(loadWhatsappAdmin());
   const results = await Promise.allSettled(tasks);
   const failed = results.find((result) => result.status === 'rejected');
   if (failed) showToast(failed.reason.message);

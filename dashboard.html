@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body class="is-locked">
   <div class="admin">
@@ -22,6 +22,10 @@
         <a href="#resumen" class="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>
           Resumen
+        </a>
+        <a href="#whatsapp">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z" /><path d="M9 9.5c.3 1.8 1.7 3.4 3.5 4l1-1 2 1v1.5a1 1 0 0 1-1 1A6.5 6.5 0 0 1 8 9.5a1 1 0 0 1 1-1h1.5l1 2-1 1" /></svg>
+          WhatsApp <span class="nav-badge hidden" id="waBadge"></span>
         </a>
         <a href="#pedidos">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
@@ -132,6 +136,23 @@
           <div class="admin-session hidden" id="adminSession">
             <span id="adminSessionText">Sesión de administración activa.</span>
             <button class="text-button" id="adminLogout" type="button">Cerrar sesión</button>
+          </div>
+        </section>
+
+        <section class="panel panel-wide hidden" id="whatsapp" data-protected>
+          <div class="panel-head">
+            <h2>WhatsApp</h2>
+            <div class="panel-head-actions">
+              <span id="waSummary"></span>
+              <button class="btn btn-ghost btn-small" id="waRefresh" type="button">Actualizar</button>
+            </div>
+          </div>
+          <p class="coverage-note" id="waStatus"></p>
+          <div class="wa-layout">
+            <ul class="wa-list" id="waList"></ul>
+            <div class="wa-thread" id="waThread">
+              <p class="comment-empty">Elige una conversación.</p>
+            </div>
           </div>
         </section>
 
@@ -491,8 +512,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="dashboard.js?v=7"></script>
+  <script src="dashboard.js?v=8"></script>
   <script src="dashboard-catalog.js?v=2"></script>
   <script src="dashboard-orders.js?v=3"></script>
+  <script src="dashboard-whatsapp.js?v=1"></script>
 </body>
 </html>

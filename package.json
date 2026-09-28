@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0"
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/functions": "^3.9.9"
   },
   "scripts": {
     "check": "find api tests *.js -name '*.js' -exec sh -c 'for f; do node --check \"$f\" || exit 1; done' sh {} +",
