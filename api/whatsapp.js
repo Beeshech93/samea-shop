@@ -106,7 +106,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido.' });
   }
   if (!webhookAuthorized(req.headers['x-webhook-token'] || req.query?.token)) {
-    console.warn('whatsapp webhook rechazado', clientIp(req));
+    console.warn('whatsapp webhook rechazado', clientIp(req), req.headers['x-webhook-token'] ? 'token incorrecto' : 'sin token', req.query?.token ? 'con token en URL' : '');
     return res.status(401).json({ error: 'No autorizado.' });
   }
   if (!agentConfigured()) return res.status(503).json({ error: 'WhatsApp no configurado.' });

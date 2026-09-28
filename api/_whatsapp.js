@@ -264,6 +264,25 @@ export async function connectionState() {
   return result.data?.instance?.state || result.data?.state || 'unknown';
 }
 
+export const WEBHOOK_VERSION = '2';
+
+// Apunta el webhook de la instancia a la tienda. El secreto va en la cabecera
+// y también en la URL, porque algunas versiones de Evolution no envían cabeceras.
+export async function configureWebhook(siteUrl) {
+  const url = `${siteUrl.replace(/\/$/, '')}/api/whatsapp?token=${encodeURIComponent(process.env.WHATSAPP_WEBHOOK_SECRET)}`;
+  const hook = await evolution('POST', `/webhook/set/${instanceName()}`, {
+    webhook: {
+      enabled: true,
+      url,
+      headers: { 'x-webhook-token': process.env.WHATSAPP_WEBHOOK_SECRET },
+      byEvents: false,
+      base64: false,
+      events: ['MESSAGES_UPSERT'],
+    },
+  });
+  if (!hook.ok) throw new Error(`No se pudo configurar el webhook (${hook.status})`);
+}
+
 // Crea la instancia si no existe, apunta su webhook a la tienda y devuelve el QR.
 export async function setupInstance(siteUrl) {
   if ((await connectionState()) === 'missing') {
@@ -275,17 +294,7 @@ export async function setupInstance(siteUrl) {
     if (!created.ok) throw new Error(`No se pudo crear la instancia (${created.status})`);
   }
 
-  const hook = await evolution('POST', `/webhook/set/${instanceName()}`, {
-    webhook: {
-      enabled: true,
-      url: `${siteUrl.replace(/\/$/, '')}/api/whatsapp`,
-      headers: { 'x-webhook-token': process.env.WHATSAPP_WEBHOOK_SECRET },
-      byEvents: false,
-      base64: false,
-      events: ['MESSAGES_UPSERT'],
-    },
-  });
-  if (!hook.ok) throw new Error(`No se pudo configurar el webhook (${hook.status})`);
+  await configureWebhook(siteUrl);
 
   const state = await connectionState();
   if (state === 'open') return { state };
@@ -296,8 +305,12 @@ export async function setupInstance(siteUrl) {
 
 // Número de WhatsApp vinculado a la instancia (solo dígitos), o null.
 export async function connectedNumber() {
-  const result = await evolution('GET', `/instance/fetchInstances?instanceName=${instanceName()}`);
-  if (!result.ok) return null;
+  let result = await evolution('GET', `/instance/fetchInstances?instanceName=${instanceName()}`);
+  if (!result.ok) result = await evolution('GET', '/instance/fetchInstances');
+  if (!result.ok) {
+    console.warn('evolution fetchInstances failed', result.status);
+    return null;
+  }
   const list = (Array.isArray(result.data) ? result.data : [result.data]).filter(Boolean);
   const wanted = process.env.EVOLUTION_INSTANCE;
   const item = list.find((i) => i.name === wanted || i.instanceName === wanted || i.instance?.instanceName === wanted) || list[0] || {};

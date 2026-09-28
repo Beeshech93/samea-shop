@@ -1,7 +1,7 @@
 import { sql } from '../../_db.js';
 import { requireAdmin } from '../../_admin.js';
 import {
-  agentConfigured, connectedNumber, connectionState, normalizeSupportNumber, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
+  agentConfigured, configureWebhook, connectedNumber, WEBHOOK_VERSION, connectionState, normalizeSupportNumber, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
   sendWhatsappText, setMode, setOutgoingId, setupInstance,
 } from '../../_whatsapp.js';
 import { ensureLogisticsSchema, getSetting, setSetting } from '../../_logistics.js';
@@ -23,6 +23,16 @@ export default async function handler(req, res) {
         // Al conectar, el número vinculado pasa a ser el de atención en la tienda.
         if (state === 'open') {
           await ensureLogisticsSchema();
+          // Actualiza el webhook de instancias conectadas con una versión anterior.
+          if ((await getSetting('wa_webhook_version')) !== WEBHOOK_VERSION && process.env.WHATSAPP_WEBHOOK_SECRET) {
+            try {
+              await configureWebhook(process.env.SITE_URL || 'https://samea.shop');
+              await setSetting('wa_webhook_version', WEBHOOK_VERSION);
+              console.log('evolution webhook updated');
+            } catch (error) {
+              console.error('evolution webhook update error', error.message);
+            }
+          }
           if (!(await getSetting('support_whatsapp'))) {
             const number = await connectedNumber().catch((error) => {
               console.error('evolution owner error', error.message);
