@@ -3,7 +3,11 @@
 (function () {
   function formatNumber(digits) {
     if (digits.length === 12 && digits.startsWith('52')) {
-      return `+52 ${digits.slice(2, 4)} ${digits.slice(4, 8)} ${digits.slice(8)}`;
+      const local = digits.slice(2);
+      // CDMX, Guadalajara y Monterrey tienen lada de 2 dígitos; el resto, de 3.
+      return ['55', '56', '33', '81'].includes(local.slice(0, 2))
+        ? `+52 ${local.slice(0, 2)} ${local.slice(2, 6)} ${local.slice(6)}`
+        : `+52 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
     }
     return `+${digits}`;
   }
