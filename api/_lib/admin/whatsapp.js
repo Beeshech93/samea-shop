@@ -1,7 +1,7 @@
 import { sql } from '../../_db.js';
 import { requireAdmin } from '../../_admin.js';
 import {
-  agentConfigured, connectionState, ensureWhatsappSchema, evolutionConfigured, logoutInstance, recordOutgoing,
+  agentConfigured, connectionState, ensureWhatsappSchema, evolutionBaseUrl, evolutionConfigured, logoutInstance, recordOutgoing,
   sendWhatsappText, setMode, setOutgoingId, setupInstance,
 } from '../../_whatsapp.js';
 
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
 
     // Conexión del número (instancia de Evolution API).
     if (req.method === 'GET' && req.query?.view === 'connection') {
+      if (process.env.EVOLUTION_API_URL && !evolutionBaseUrl()) return res.status(200).json({ state: 'invalid_url' });
       if (!evolutionConfigured()) return res.status(200).json({ state: 'not_configured' });
       try {
         return res.status(200).json({ state: await connectionState() });
@@ -23,6 +24,9 @@ export default async function handler(req, res) {
       }
     }
     if (req.method === 'POST' && ['connect', 'logout'].includes(req.body?.action)) {
+      if (process.env.EVOLUTION_API_URL && !evolutionBaseUrl()) {
+        return res.status(503).json({ error: 'EVOLUTION_API_URL no es una dirección válida. Debe ser la URL completa de tu servidor, p. ej. https://evolution-xxxx.up.railway.app' });
+      }
       if (!evolutionConfigured()) return res.status(503).json({ error: 'Faltan las variables de Evolution API en Vercel.' });
       if (!process.env.WHATSAPP_WEBHOOK_SECRET) return res.status(503).json({ error: 'Falta WHATSAPP_WEBHOOK_SECRET en Vercel.' });
       try {
@@ -55,6 +59,7 @@ export default async function handler(req, res) {
         conversations,
         status: {
           evolution: evolutionConfigured(),
+          evolutionUrlInvalid: Boolean(process.env.EVOLUTION_API_URL) && !evolutionBaseUrl(),
           agent: agentConfigured(),
           anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
           webhookSecret: Boolean(process.env.WHATSAPP_WEBHOOK_SECRET),

@@ -7,8 +7,19 @@ import { sql } from './_db.js';
 // EVOLUTION_INSTANCE     nombre de la instancia conectada a tu WhatsApp
 // WHATSAPP_WEBHOOK_SECRET  secreto que va en la URL del webhook (?token=...)
 
+// Dirección del servidor de Evolution API, o null si no es una URL http(s) válida.
+export function evolutionBaseUrl() {
+  const raw = String(process.env.EVOLUTION_API_URL || '').trim().replace(/\/+$/, '');
+  try {
+    const url = new URL(raw);
+    return ['https:', 'http:'].includes(url.protocol) && url.hostname.includes('.') ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
 export function evolutionConfigured() {
-  return Boolean(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY && process.env.EVOLUTION_INSTANCE);
+  return Boolean(evolutionBaseUrl() && process.env.EVOLUTION_API_KEY && process.env.EVOLUTION_INSTANCE);
 }
 
 export function agentConfigured() {
@@ -99,7 +110,7 @@ export function parseIncoming(payload) {
 
 // Envía un texto por Evolution API y devuelve el id del mensaje de WhatsApp.
 export async function sendWhatsappText(jid, text) {
-  const base = process.env.EVOLUTION_API_URL.replace(/\/$/, '');
+  const base = evolutionBaseUrl();
   const response = await fetch(`${base}/message/sendText/${encodeURIComponent(process.env.EVOLUTION_INSTANCE)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },
@@ -173,7 +184,7 @@ export async function isOwnEcho(jid, waMessageId, content) {
 // ---------- Gestión de la instancia (desde el panel) ----------
 
 async function evolution(method, path, body) {
-  const base = process.env.EVOLUTION_API_URL.replace(/\/$/, '');
+  const base = evolutionBaseUrl();
   const response = await fetch(`${base}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', apikey: process.env.EVOLUTION_API_KEY },

@@ -93,3 +93,13 @@ test('el webhook acepta el secreto en la cabecera x-webhook-token', async () => 
   assert.equal(res.statusCode, 401);
   delete process.env.WHATSAPP_WEBHOOK_SECRET;
 });
+
+test('detecta una EVOLUTION_API_URL que no es una dirección', () => {
+  for (const [value, ok] of [['400', false], ['samea', false], ['https://evolution-x.up.railway.app/', true], ['http://1.2.3.4:8080', true], ['ftp://x.com', false], ['', false]]) {
+    process.env.EVOLUTION_API_URL = value;
+    assert.equal(Boolean(W.evolutionBaseUrl()), ok, value);
+  }
+  process.env.EVOLUTION_API_URL = 'https://evolution-x.up.railway.app/';
+  assert.equal(W.evolutionBaseUrl(), 'https://evolution-x.up.railway.app');
+  delete process.env.EVOLUTION_API_URL;
+});

@@ -19,7 +19,8 @@ const waLabel = (c) => c.name || (c.phone ? `+${c.phone}` : c.jid.split('@')[0])
 function renderWaStatus(status) {
   const note = document.getElementById('waStatus');
   const missing = [];
-  if (!status.evolution) missing.push('Evolution API (EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE)');
+  if (status.evolutionUrlInvalid) missing.push('EVOLUTION_API_URL con una dirección válida (https://…)');
+  else if (!status.evolution) missing.push('Evolution API (EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE)');
   if (!status.webhookSecret) missing.push('WHATSAPP_WEBHOOK_SECRET');
   if (!status.anthropic) missing.push('ANTHROPIC_API_KEY');
   note.textContent = missing.length
@@ -167,6 +168,7 @@ const WA_STATES = {
   close: ['Desconectado', 'status-warn'],
   missing: ['Sin instancia', 'status-warn'],
   not_configured: ['Sin configurar en Vercel', 'status-warn'],
+  invalid_url: ['EVOLUTION_API_URL no es una URL válida', 'status-warn'],
   unreachable: ['Servidor de Evolution sin respuesta', 'status-warn'],
 };
 let waQrTimer = null;
@@ -177,7 +179,7 @@ function renderWaConnection(state) {
   badge.textContent = label;
   badge.className = `status ${className}`;
   const connected = state === 'open';
-  document.getElementById('waConnect').classList.toggle('hidden', connected || state === 'not_configured');
+  document.getElementById('waConnect').classList.toggle('hidden', connected || state === 'not_configured' || state === 'invalid_url');
   document.getElementById('waLogout').classList.toggle('hidden', !connected);
   if (connected) {
     document.getElementById('waQr').classList.add('hidden');
